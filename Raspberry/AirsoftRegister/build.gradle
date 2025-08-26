@@ -1,0 +1,49 @@
+plugins {
+    id 'java'
+    id 'org.hidetake.ssh' version '2.12.0'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation "com.diozero:diozero-core:1.4.1"
+    implementation "org.json:json:20250517"
+}
+
+jar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    manifest {
+        attributes 'Main-Class': 'me.madmagic.Main'
+    }
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    } {
+        exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
+    }
+
+    setDestinationDirectory(file(project.rootDir))
+}
+
+remotes {
+    rb4 {
+        host = 'rb4.local'   // will match your ~/.ssh/config entry
+        user = 'MadMagic'    // technically redundant if ssh config sets User
+        identity = file(System.getProperty("user.home") + "/.ssh/rb4")
+    }
+}
+
+tasks.register('FTPUpload') {
+    dependsOn tasks.named('jar')
+
+    doLast {
+        def jarFile = tasks.named('jar').get().archiveFile.get().asFile
+        ssh.run {
+            session(remotes.rb4) {
+                put from: jarFile, into: '/home/MadMagic/jars/'
+                //execute 'java --enable-native-access=ALL-UNNAMED -jar /home/MadMagic/jars/AirsoftRegister.jar --enable-native-access=ALL-UNNAMED'
+            }
+        }
+    }
+}
