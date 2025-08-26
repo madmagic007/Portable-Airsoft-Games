@@ -34,10 +34,10 @@ void CustomCluster::addReceiver(String key) {
     _receiverDefined = true;
 }
 
-boolean CustomCluster::sendValue(String val) {
+boolean CustomCluster::sendValue(int8_t arr[]) {
     esp_zb_lock_acquire(portMAX_DELAY);
     esp_zb_zcl_status_t ret = esp_zb_zcl_set_manufacturer_attribute_val(
-        _endpoint, SENDER_CLUSTER_ID, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC, VALUE_ATTRIBUTE_ID, createString(val), false
+        _endpoint, SENDER_CLUSTER_ID, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC, VALUE_ATTRIBUTE_ID, arr, false
     );
     esp_zb_lock_release();
 

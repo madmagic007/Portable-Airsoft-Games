@@ -40,8 +40,7 @@ public:
         );
     }
 
-    static void reportScanner(String tag);
-    static void reportBattery(float packed);
+    static void reportValue(uint8_t arr[], String clusterName);
     
     void setCB(String clusterName, void (*callback)(uint8_t[], size_t));
 

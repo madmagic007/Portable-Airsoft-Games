@@ -55,14 +55,9 @@ void ZigbeeController::confirmed(uint8_t[], size_t) {
     rgbLedWrite(RGB_BUILTIN, 0, 1, 0);
 }
 
-void ZigbeeController::reportScanner(String tag) {
-    clusters["scanner"]->sendValue(tag);
+void ZigbeeController::reportValue(uint8_t arr[], String clusterName) {
+    clusters[clusterName]->sendValue(arr);
 }
-
-void reportBattery(float packed) {
-    //clusters[4].sendValue(tag);
-}
-
 
 void ZigbeeController::setCB(String clusterName, void (*callback)(uint8_t[], size_t)) {
     clusters[clusterName]->setReceiveCallback(callback);
