@@ -1,39 +1,38 @@
-//import * as Sys from "sys";
+import { deviceAddCustomCluster } from "zigbee-herdsman-converters/lib/modernExtend";
+import { Zcl } from "zigbee-herdsman";
 import {logger} from "zigbee-herdsman-converters/lib/logger";
-import {determineEndpoint} from "zigbee-herdsman-converters/lib/modernExtend";
 
-const tag = {
-	cluster: "genAnalogInput",
-	type: ["attributeReport", "readResponse"],
+//TODO
+//ADD `globalThis.controller = controller;` to index.js:148
+
+const fromZB = {
+	cluster: "toMQTT",
+	type: ["attributeReport", "topic"],
 	convert: (model, msg, publish, options, meta) => {
-		const readValue = msg.data.presentValue;
-		return {"tag": readValue};
+		const clusters = msg.endpoint.clusters;
+		const clusterName = msg.cluster;
+		const attributes = clusters[clusterName].attributes;
+		const topic = attributes.topic;
+	
+		const payload = { 
+			"device": options.friendly_name,
+			"value": attributes.value
+		};
+		
+		globalThis.controller.mqtt.publish(topic, JSON.stringify(payload), {});
 	}
 };
 
-function createFloat(v1 = 0, v2 = 0, v3 = 0, v4 = 0) {
-	let int32 = (v1 << 24) | (v2 << 16) | (v3 << 8) | v4;
-
-	const buffer = new ArrayBuffer(4);
-	const view = new DataView(buffer);
-
-	view.setUint32(0, int32);
-	return view.getFloat32(0);
-}
-
-const light = {
-	key: ["setColor"],
+const toZB = {
+	key: ["write"],
 	convertSet: async (entity, key, value, meta) => {
-		let val = createFloat(value.r, value.g, value.b, value.duration);
-		await entity.write("genAnalogOutput", {"presentValue": val});
-	}
-};
-
-const buzzer = {
-	key: ["buzz"],
-	convertSet: async (entity, key, value, meta) => {
-		let val = createFloat(value.duration);
-		await entity.write("genAnalogOutput", {"presentValue": val});
+		for (const endpoint of meta.device.endpoints) {
+			for (const [vKey, vValue] of Object.entries(value)) {
+				if (endpoint.getClusterAttributeValue("fromMQTT", "topic") == vKey) {
+					await endpoint.write("fromMQTT", {"value": vValue});
+				}
+			}
+		}
 	}
 };
 
@@ -42,9 +41,28 @@ export default {
     model: "AirsoftPoint",
     vendor: "MadMagic",
     description: "Airsoft Game Point",
-    fromZigbee: [tag],
-    toZigbee: [light, buzzer],
-    extend: [],
+    fromZigbee: [fromZB],
+    toZigbee: [toZB],
+    extend: [
+    	deviceAddCustomCluster("toMQTT", {
+		ID: 0xff00,
+		attributes: {
+			value: {ID: 0x0000, type: Zcl.DataType.CHAR_STR},
+			topic: {ID: 0x0001, type: Zcl.DataType.CHAR_STR},
+		},
+		commands: {},
+		commandsResponse: {},
+	}),
+    	deviceAddCustomCluster("fromMQTT", {
+		ID: 0xff01,
+		attributes: {
+			value: {ID: 0x0000, type: Zcl.DataType.CHAR_STR},
+			topic: {ID: 0x0001, type: Zcl.DataType.CHAR_STR},
+		},
+		commands: {},
+		commandsResponse: {},
+	})
+    ],
     meta: {},
 };
 
