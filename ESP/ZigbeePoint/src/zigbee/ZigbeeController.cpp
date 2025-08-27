@@ -1,6 +1,8 @@
 #include "ZigbeeController.h"
 
-void ZigbeeController::setupTask(void* _) {
+void ZigbeeController::setup(CustomCluster* clusters, size_t size) {
+    _clusters = clusters;
+
     pinMode(BOOT_PIN, INPUT_PULLUP);
     rgbLedWrite(BOARD_LED, 1, 0, 0);
 
@@ -8,11 +10,9 @@ void ZigbeeController::setupTask(void* _) {
     extender.setManufacturerAndModel("MadMagic", "AirsoftPoint");
     Zigbee.addEndpoint(&extender);
 
-    for (size_t i = 0; i < clusterSize; i++) {
-        Zigbee.addEndpoint(&clusterList[i]);
+    for (size_t i = 0; i < size; i++) {
+        Zigbee.addEndpoint(&clusters[i]);
     }
-
-    clusters["airsoftPoint"]->setReceiveCallback(&confirmed);
 
     Zigbee.setTimeout(INT32_MAX);
     if (!Zigbee.begin(ZIGBEE_ROUTER)) {
@@ -30,37 +30,23 @@ void ZigbeeController::setupTask(void* _) {
         checkTask, "zigbeeCheckTask", 2048,
         NULL, 1, NULL
     );
-
-    vTaskDelete(NULL);
 }
 
 void ZigbeeController::checkTask(void* _) {
     while (!_confirmed) {
-        clusters["airsoftPoint"]->reportAttribs();
+        Serial.println("reporting");
+        _clusters[0].reportAttribs();
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 
     vTaskDelete(NULL);
 }
 
-void ZigbeeController::confirmed(uint8_t[], size_t) {
+void ZigbeeController::confirmed() {
     if (_confirmed) return;
-
     _confirmed = true;
 
-    for (size_t i = 0; i < clusterSize; i++) {
-        clusterList[i].reportAttribs();
-    }
-
     rgbLedWrite(RGB_BUILTIN, 0, 1, 0);
-}
-
-void ZigbeeController::reportValue(uint8_t arr[], String clusterName) {
-    clusters[clusterName]->sendValue(arr);
-}
-
-void ZigbeeController::setCB(String clusterName, void (*callback)(uint8_t[], size_t)) {
-    clusters[clusterName]->setReceiveCallback(callback);
 }
 
 void ZigbeeController::loop() {

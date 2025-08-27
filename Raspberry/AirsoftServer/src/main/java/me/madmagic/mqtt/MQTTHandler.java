@@ -1,4 +1,4 @@
-package me.madmagic;
+package me.madmagic.mqtt;
 
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttClient;
@@ -27,8 +27,13 @@ public class MQTTHandler {
         });
     }
 
-    public static void publish(String device, JSONObject post) throws Exception {
+    public static void publish(String device, JSONObject post) {
         MqttMessage msg = new MqttMessage(new JSONObject().put("write", post).toString().getBytes());
-        mqtt.publish("airsoft/" + device + "/set", msg);
+
+        try {
+            mqtt.publish("airsoft/" + device + "/set", msg);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

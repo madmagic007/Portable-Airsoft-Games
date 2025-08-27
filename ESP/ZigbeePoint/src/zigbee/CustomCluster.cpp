@@ -1,7 +1,10 @@
 #include "CustomCluster.h"
 
-CustomCluster::CustomCluster(const CustomClusterConfig cfg) : ZigbeeEP(cfg.endpoint) {
-    _cfg = cfg;
+CustomCluster::CustomCluster(uint8_t endpoint, String senderTopic, String receiverKey, String moduleKey) : ZigbeeEP(endpoint) {
+    _senderTopic = senderTopic;
+    _receiverKey = receiverKey;
+    _moduleKey = moduleKey;
+
     _device_id = ESP_ZB_HA_SIMPLE_SENSOR_DEVICE_ID;
     _ep_config = {.endpoint = _endpoint, .app_profile_id = ESP_ZB_AF_HA_PROFILE_ID, .app_device_id = ESP_ZB_HA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0};
     
@@ -11,15 +14,24 @@ CustomCluster::CustomCluster(const CustomClusterConfig cfg) : ZigbeeEP(cfg.endpo
     //mandatory clusters
     esp_zb_cluster_list_add_basic_cluster(_cluster_list, esp_zb_basic_cluster_create(NULL), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
     esp_zb_cluster_list_add_identify_cluster(_cluster_list, esp_zb_identify_cluster_create(NULL), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+}
 
-    if (!cfg.senderTopic.isEmpty()) addSender(cfg.senderTopic);
-    if (!cfg.receiverKey.isEmpty()) addReceiver(cfg.receiverKey);
+void CustomCluster::setup(std::map<String, ModuleBase*>& modules) {
+    _linkedModule = modules[_moduleKey];
+
+    if (!_senderTopic.isEmpty()) {
+        addSender(_senderTopic);
+
+        _linkedModule->setReportCB(sendValueTrampoline, this);
+    }
+
+    if (!_receiverKey.isEmpty()) addReceiver(_receiverKey);
 }
 
 void CustomCluster::addSender(String topic) {
     esp_zb_attribute_list_t *cluster = esp_zb_zcl_attr_list_create(SENDER_CLUSTER_ID);
-    esp_zb_custom_cluster_add_custom_attr(cluster, VALUE_ATTRIBUTE_ID, ESP_ZB_ZCL_ATTR_TYPE_CHAR_STRING, ESP_ZB_ZCL_ATTR_ACCESS_READ_WRITE | ESP_ZB_ZCL_ATTR_ACCESS_REPORTING, createString(""));
-    esp_zb_custom_cluster_add_custom_attr(cluster, TOPIC_ATTRIBUTE_ID, ESP_ZB_ZCL_ATTR_TYPE_CHAR_STRING, ESP_ZB_ZCL_ATTR_ACCESS_READ_WRITE | ESP_ZB_ZCL_ATTR_ACCESS_REPORTING, createString(topic));
+    esp_zb_custom_cluster_add_custom_attr(cluster, VALUE_ATTRIBUTE_ID, ESP_ZB_ZCL_ATTR_TYPE_CHAR_STRING, ESP_ZB_ZCL_ATTR_ACCESS_READ_WRITE | ESP_ZB_ZCL_ATTR_ACCESS_REPORTING, Util::createString(""));
+    esp_zb_custom_cluster_add_custom_attr(cluster, TOPIC_ATTRIBUTE_ID, ESP_ZB_ZCL_ATTR_TYPE_CHAR_STRING, ESP_ZB_ZCL_ATTR_ACCESS_READ_WRITE | ESP_ZB_ZCL_ATTR_ACCESS_REPORTING, Util::createString(topic));
     esp_zb_cluster_list_add_custom_cluster(_cluster_list, cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
 
     _senderDefined =  true;
@@ -27,14 +39,14 @@ void CustomCluster::addSender(String topic) {
 
 void CustomCluster::addReceiver(String key) {
     esp_zb_attribute_list_t *cluster = esp_zb_zcl_attr_list_create(RECEIVER_CLUSTER_ID);
-    esp_zb_custom_cluster_add_custom_attr(cluster, VALUE_ATTRIBUTE_ID, ESP_ZB_ZCL_ATTR_TYPE_CHAR_STRING, ESP_ZB_ZCL_ATTR_ACCESS_READ_WRITE | ESP_ZB_ZCL_ATTR_ACCESS_REPORTING, createString(""));
-    esp_zb_custom_cluster_add_custom_attr(cluster, TOPIC_ATTRIBUTE_ID, ESP_ZB_ZCL_ATTR_TYPE_CHAR_STRING, ESP_ZB_ZCL_ATTR_ACCESS_READ_WRITE | ESP_ZB_ZCL_ATTR_ACCESS_REPORTING, createString(key));
+    esp_zb_custom_cluster_add_custom_attr(cluster, VALUE_ATTRIBUTE_ID, ESP_ZB_ZCL_ATTR_TYPE_CHAR_STRING, ESP_ZB_ZCL_ATTR_ACCESS_READ_WRITE | ESP_ZB_ZCL_ATTR_ACCESS_REPORTING, Util::createString(""));
+    esp_zb_custom_cluster_add_custom_attr(cluster, TOPIC_ATTRIBUTE_ID, ESP_ZB_ZCL_ATTR_TYPE_CHAR_STRING, ESP_ZB_ZCL_ATTR_ACCESS_READ_WRITE | ESP_ZB_ZCL_ATTR_ACCESS_REPORTING, Util::createString(key));
     esp_zb_cluster_list_add_custom_cluster(_cluster_list, cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
 
     _receiverDefined = true;
 }
 
-boolean CustomCluster::sendValue(int8_t arr[]) {
+boolean CustomCluster::sendValue(uint8_t arr[]) {
     esp_zb_lock_acquire(portMAX_DELAY);
     esp_zb_zcl_status_t ret = esp_zb_zcl_set_manufacturer_attribute_val(
         _endpoint, SENDER_CLUSTER_ID, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC, VALUE_ATTRIBUTE_ID, arr, false
@@ -94,6 +106,6 @@ void CustomCluster::zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *me
     for (uint8_t i = 0; i < length; i++) {
         data[i] = bytes[i + 1];
     }
-
-    if (_receiveCB) _receiveCB(data, length);
+    
+    if (_linkedModule) _linkedModule->callBack(data, length);
 }

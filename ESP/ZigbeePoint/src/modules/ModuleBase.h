@@ -1,22 +1,29 @@
 #pragma once
 
-#include <functional>
+typedef bool (*ReportCallback)(uint8_t[], void* context);
+typedef bool (*ReceiveCallback)(uint8_t[], size_t, void* context);
+
+#include "Arduino.h"
 #include "../Util.h"
 
 class ModuleBase {
 public:
-    ModuleBase(const int* pins) : _pins(pins) {}
-    virtual void setup();
-    virtual static void callBack(uint8_t arr[], size_t size);
+    ModuleBase(const uint8_t* pins) : _pins(pins) {}
+    virtual void setup() = 0;
+    virtual void callBack(uint8_t arr[], size_t size) = 0;
 
-    void setReportCB(std::function<void(uint8_t[], String)> reportCB) {
-        _reportCB = reportCB;
+    void setReportCB(ReportCallback cb, void* context) {
+        _reportCB = cb;
+        _context = context;
     }
         
-    bool reportValue(uilt8_t arr[], String clusterName) {
-        if (_reportCB) _reportCB(arr, clusterName);
+    bool reportValue(uint8_t arr[]) {
+        if (_reportCB) return _reportCB(arr, _context);
+        return false;
     }
 protected:
-    const int* _pins;
-    std::function<void(uint8_t[], String)> _reportCB;
+    const uint8_t* _pins;
+
+    ReportCallback _reportCB = nullptr;
+    void* _context = nullptr;
 };

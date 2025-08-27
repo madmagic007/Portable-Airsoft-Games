@@ -1,9 +1,7 @@
 plugins {
     id 'java'
+    id 'org.hidetake.ssh' version '2.12.0'
 }
-
-libsDirName = '..'
-archivesBaseName = rootProject.name
 
 repositories {
     mavenCentral()
@@ -23,5 +21,28 @@ jar {
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     } {
         exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
+    }
+
+    setDestinationDirectory(file(project.rootDir))
+}
+
+remotes {
+    airsoftpi {
+        host = 'airsoftpi.local'   // will match your ~/.ssh/config entry
+        user = 'pi'    // technically redundant if ssh config sets User
+        identity = file(System.getProperty("user.home") + "/.ssh/id_ed25519")
+    }
+}
+
+tasks.register('FTPUpload') {
+    dependsOn tasks.named('jar')
+
+    doLast {
+        def jarFile = tasks.named('jar').get().archiveFile.get().asFile
+        ssh.run {
+            session(remotes.airsoftpi) {
+                put from: jarFile, into: '/home/pi/'
+            }
+        }
     }
 }
