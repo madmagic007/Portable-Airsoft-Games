@@ -14,7 +14,7 @@ public:
         _clusterSize = clusterSize;
     }
 
-    void callBack(uint8_t arr[], size_t size) override {
+    void receiveData(uint8_t arr[], size_t size) override {
         ZigbeeController::confirmed();
 
         if (size == 0) {

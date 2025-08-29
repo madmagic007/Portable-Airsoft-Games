@@ -15,12 +15,12 @@
 class CustomCluster : public ZigbeeEP {
 public:
     CustomCluster() = default;
-    CustomCluster(uint8_t endpoint, String senderTopic, String receiverKey, String moduleKey);
+    CustomCluster(uint8_t endpoint, const String& senderTopic, const String& receiverKey, const String& moduleKey);
 
     void setup(std::map<String, ModuleBase*>& modules);
 
-    void addSender(String topic);
-    void addReceiver(String tag);
+    void addSender(const String& topic);
+    void addReceiver(const String& tag);
     void reportAttribs();
 
     boolean sendValue(uint8_t arr[]);
@@ -32,6 +32,7 @@ public:
 private:
     void zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) override;
     boolean reportAttr(uint16_t clusterID, uint16_t attrID);
+    void defineCluster(uint16_t clusterID, const String& topicKey);
 
     boolean _senderDefined;
     boolean _receiverDefined;

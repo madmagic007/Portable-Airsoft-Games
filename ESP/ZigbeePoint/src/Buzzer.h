@@ -13,15 +13,7 @@ public:
     }
     
     static void callBack(uint8_t arr[], size_t size) {
-        char buf[size + 1];
-        memcpy(buf, arr, size);
-        buf[size] = '\0';
-        int value = atoi(buf);
         
-        xTaskCreate(
-            buzzerTask, "buzzerTask", 2048,
-             (void*)value, 1, NULL
-        );
     }
     
 private:
