@@ -7,6 +7,7 @@ public:
     using ModuleBase::ModuleBase;
 
     void setup() override {
+        Serial.println("setup buzzer");
         pinMode(_pins[0], OUTPUT);
         digitalWrite(_pins[0], LOW);
     }
@@ -15,11 +16,17 @@ public:
         char buf[size + 1];
         memcpy(buf, arr, size);
         buf[size] = '\0';
-        int value = atoi(buf);
+        buzzDuration = atoi(buf);
         
-        xTaskCreate(
-            buzzerTask, "buzzerTask", 2048,
-             (void*)value, 1, NULL
-        );
+        startTask("buzzerTask");
     }
+
+    void task() override {
+        digitalWrite(_pins[0], HIGH);
+        vTaskDelay(pdMS_TO_TICKS(1000 * buzzDuration));
+        digitalWrite(_pins[0], LOW);
+    }
+
+private:
+    uint8_t buzzDuration = 0;
 };

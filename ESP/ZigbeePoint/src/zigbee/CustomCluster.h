@@ -23,22 +23,23 @@ public:
     void addReceiver(const String& tag);
     void reportAttribs();
 
-    boolean sendValue(uint8_t arr[]);
+    bool setValue(uint8_t arr[]);
+    bool sendValue(uint8_t arr[]);
 
     static bool sendValueTrampoline(uint8_t arr[], void* context) {
         return static_cast<CustomCluster*>(context)->sendValue(arr);
     }
 
+    ModuleBase* _linkedModule;
 private:
     void zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) override;
-    boolean reportAttr(uint16_t clusterID, uint16_t attrID);
+    bool reportAttr(uint16_t clusterID, uint16_t attrID);
     void defineCluster(uint16_t clusterID, const String& topicKey);
 
-    boolean _senderDefined;
-    boolean _receiverDefined;
+    bool _senderDefined;
+    bool _receiverDefined;
 
     String _senderTopic;
     String _receiverKey;
     String _moduleKey;
-    ModuleBase* _linkedModule;
 };

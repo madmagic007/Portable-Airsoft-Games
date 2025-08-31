@@ -38,18 +38,18 @@ void CustomCluster::defineCluster(uint16_t clusterID, const String& topicKey) {
     esp_zb_attribute_list_t *cluster = esp_zb_zcl_attr_list_create(clusterID);
 
     uint8_t len = topicKey.length();
-    uint8_t buffer[len + 1]
+    uint8_t buffer[len + 1];
     buffer[0] = len;
     memcpy(buffer + 1, topicKey.c_str(), len);
 
     uint8_t value[] = { 0 };
 
     esp_zb_custom_cluster_add_custom_attr(cluster, VALUE_ATTRIBUTE_ID, ESP_ZB_ZCL_ATTR_TYPE_CHAR_STRING, ESP_ZB_ZCL_ATTR_ACCESS_READ_WRITE | ESP_ZB_ZCL_ATTR_ACCESS_REPORTING, value);
-    esp_zb_custom_cluster_add_custom_attr(cluster, TOPIC_ATTRIBUTE_ID, ESP_ZB_ZCL_ATTR_TYPE_CHAR_STRING, ESP_ZB_ZCL_ATTR_ACCESS_READ_WRITE | ESP_ZB_ZCL_ATTR_ACCESS_REPORTING, topicKey);
+    esp_zb_custom_cluster_add_custom_attr(cluster, TOPIC_ATTRIBUTE_ID, ESP_ZB_ZCL_ATTR_TYPE_CHAR_STRING, ESP_ZB_ZCL_ATTR_ACCESS_READ_WRITE | ESP_ZB_ZCL_ATTR_ACCESS_REPORTING, buffer);
     esp_zb_cluster_list_add_custom_cluster(_cluster_list, cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
 }
 
-boolean CustomCluster::sendValue(uint8_t arr[]) {
+bool CustomCluster::setValue(uint8_t arr[]) {
     esp_zb_lock_acquire(portMAX_DELAY);
     esp_zb_zcl_status_t ret = esp_zb_zcl_set_manufacturer_attribute_val(
         _endpoint, SENDER_CLUSTER_ID, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC, VALUE_ATTRIBUTE_ID, arr, false
@@ -60,6 +60,12 @@ boolean CustomCluster::sendValue(uint8_t arr[]) {
         Serial.printf("Failed to set input: 0x%x: %s\n", ret, esp_zb_zcl_status_to_name(ret));
         return false;
     }
+    
+    return true;
+}
+
+bool CustomCluster::sendValue(uint8_t arr[]) {
+    setValue(arr);
 
     return reportAttr(SENDER_CLUSTER_ID, VALUE_ATTRIBUTE_ID);
 }
@@ -110,5 +116,5 @@ void CustomCluster::zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *me
         data[i] = bytes[i + 1];
     }
     
-    if (_linkedModule) _linkedModule->callBack(data, length);
+    if (_linkedModule) _linkedModule->doReceiveData(data, length);
 }

@@ -4,7 +4,6 @@ void ZigbeeController::setup(CustomCluster* clusters, size_t size) {
     _clusters = clusters;
 
     pinMode(BOOT_PIN, INPUT_PULLUP);
-    rgbLedWrite(BOARD_LED, 1, 0, 0);
 
     ZigbeeRangeExtender extender(1);
     extender.setManufacturerAndModel("MadMagic", "AirsoftPoint");
@@ -34,7 +33,6 @@ void ZigbeeController::setup(CustomCluster* clusters, size_t size) {
 
 void ZigbeeController::checkTask(void* _) {
     while (!_confirmed) {
-        Serial.println("reporting");
         _clusters[0].reportAttribs();
         vTaskDelay(pdMS_TO_TICKS(1000));
     }

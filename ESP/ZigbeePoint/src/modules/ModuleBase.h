@@ -8,11 +8,16 @@ typedef bool (*ReportCallback)(uint8_t[], void* context);
 class ModuleBase {
 public:
     ModuleBase(const uint8_t* pins) : _pins(pins) {}
-    virtual void receiveData(uint8_t arr[], size_t size) {}
 
     void doSetup() {
+        if (_setup) return;
         _setup = true;
         setup();
+    }
+    
+    void doReceiveData(uint8_t arr[], size_t size) {
+        if (!_setup) return;
+        receiveData(arr, size);
     }
 
     void doLoop() {
@@ -26,14 +31,15 @@ public:
     }
 protected:
     virtual void setup() {}
-    virtual void loop() {}
+    virtual void receiveData(uint8_t arr[], size_t size) {}
     virtual void task() {}
+    virtual void loop() {}
         
     bool reportValue(const String& str) {
         if (!_reportCB) return false;
         
         uint8_t len = str.length();
-        uint8_t buffer[len + 1]
+        uint8_t buffer[len + 1];
         buffer[0] = len;
         memcpy(buffer + 1, str.c_str(), len);
 
@@ -41,6 +47,7 @@ protected:
     }
 
     void startTask(String name) {
+        if (!_setup) return;
         xTaskCreate(taskWrapper, name.c_str(), 4096, this, 1, &_taskHandle);
     }
 
@@ -52,7 +59,12 @@ protected:
     static void taskWrapper(void* pvParameters) {
         ModuleBase* instance = static_cast<ModuleBase*>(pvParameters);
         instance->task();
-        stopTask();
+        instance->stopTask();
+    }
+
+    void pinOutput(uint8_t pin, uint8_t defaultVal = LOW) {
+        pinMode(pin, OUTPUT);
+        digitalWrite(pin, defaultVal);
     }
 
     const uint8_t* _pins;

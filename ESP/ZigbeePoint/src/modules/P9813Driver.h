@@ -7,51 +7,65 @@ public:
     using ModuleBase::ModuleBase;
 
     void setup() override {
-        pinMode(_pins[0], OUTPUT); // clk
-        pinMode(_pins[1], OUTPUT); // data
+        Serial.println("driver setup");
+        
+        _data = _pins[0];
+        _clk = _pins[1];
 
-        digitalWrite(_pins[0], LOW);
-        digitalWrite(_pins[1], LOW);
+        pinOutput(_data);
+        pinOutput(_clk, HIGH);
     }
 
     void receiveData(uint8_t arr[], size_t size) override {
-        if (size < 6 || size % 2 != 0) return;
+        if (size < 6) return;
         
-        _taskArr = new uint8_t[size / 2];
-        CustomCluster::hexStringToBytes(arr, _taskArr, size);
+        uint8_t cols[3];
+        Util::hexStringToBytes(arr, cols, 6);
 
-        startTask("ledTask");
+        _r = cols[0];
+        _g = cols[1];
+        _b = cols[2];
+        _dur = 0;
+
+        if (size > 6) {
+            for (size_t i = 6; i < size; ++i) {
+                char c = arr[i];
+                _dur = _dur * 10 + (c - '0');
+            }
+        }
+
+        startTask("ledDriverTask");
     }
 
     void task() override {
-        byte r = _taskArr[0];
-        byte g = _taskArr[1];
-        byte b = _taskArr[2];
+        Serial.printf("driver: %d, %d, %d, %d\n", _r, _g, _b, _dur);
 
         sendByte(0b11000000);
-        sendByte(b);
-        sendByte(g);
-        sendByte(r);
+        sendByte(_b);
+        sendByte(_g);
+        sendByte(_r);
         latch();
 
-        Serial.printf("%d, %d, %d\n", r, g, b);
+        if (_dur == 0) return;
+        vTaskDelay(pdMS_TO_TICKS(_dur));
 
-        delete[] _taskArr;
-        _taskArr = nullptr;
+        sendByte(0b11000000);
+        sendByte(0);
+        sendByte(0);
+        sendByte(0);
+        latch();
     }
 
 private:
-    uint8_t* _taskArr = nullptr;
-
     void sendBit(bool bitVal) {
-        digitalWrite(_pins[1], bitVal); // data
-        digitalWrite(_pins[0], LOW);    // clk
+        digitalWrite(_data, bitVal); // data
+        digitalWrite(_clk, LOW);    // clk
         delayMicroseconds(1);
-        digitalWrite(_pins[0], HIGH);   // clk
+        digitalWrite(_clk, HIGH);   // clk
         delayMicroseconds(1);
     }
 
-    void sendByte(byte b) {
+    void sendByte(uint8_t b) {
         for (int i = 7; i >= 0; i--) {
             sendBit(b & (1 << i));
         }
@@ -62,4 +76,8 @@ private:
             sendBit(0);
         }
     }
+
+    uint8_t _data, _clk;
+    uint8_t _r, _g, _b;
+    uint16_t _dur;
 };
