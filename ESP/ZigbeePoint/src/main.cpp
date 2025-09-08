@@ -6,12 +6,15 @@
 #include "modules/BatteryMonitor.h"
 #include "modules/GenericLed.h"
 
-//const uint8_t scannerPins[] = {0, 1, 2, 3, 4, 5, 6, 7}; // sda, clk, mosi, miso, rst, R, G, B
-const uint8_t scannerPins[] = {4, 5, 6, 7, 3, 0, 1, 2}; // sda, clk, mosi, miso, rst, R, G, B
+const uint8_t scannerPins[] = {4, 5, 6, 7, 23, 1, 2, 3}; // sda, clk, mosi, miso, rst, R, G, B
 const uint8_t ledDriverPins[] = {14, 15}; // data clk
 const uint8_t buzzerPins[] = {20};
-const uint8_t batteryPins[] = {21};
-const uint8_t genericLedPins[] = {21, 22, 23}; // R, G, B
+const uint8_t batteryPins[] = {0};
+const uint8_t genericLedPins[] = {14, 15, 20}; // R, G, B
+
+// faulty one, 2 use this layout
+const uint8_t scanner1Pins[] = {3, 4, 5, 6, 7, 0, 1, 2}; // sda, clk, mosi, miso, rst, R, G, B
+const uint8_t battery1Pins[] = {21};
 
 static ZigbeeController zigbee;
 static AirsoftPoint airsoftPoint(nullptr);
@@ -40,10 +43,39 @@ static CustomCluster clusters[] = {
 };
 static size_t clusterSize = sizeof(clusters) / sizeof(clusters[0]);
 
+uint32_t checkPinDischarge(uint8_t pin) {
+    uint32_t sum = 0;
+
+    for (int i = 0; i < 5; i++) {
+        pinMode(pin, OUTPUT);
+        digitalWrite(pin, HIGH);
+        delayMicroseconds(5);
+
+        pinMode(pin, INPUT);
+        uint32_t t0 = micros();
+        while (digitalRead(pin) == HIGH) {
+            if ((micros() - t0) > 200) break;
+        }
+        sum += (micros() - t0);
+
+        delay(2);
+    }
+
+    return sum / 5;
+}
 void setup() {
-    rgbLedWrite(BOARD_LED, 1, 0, 0);
     Serial.begin(115200);
-    delay(2000);
+    rgbLedWrite(BOARD_LED, 1, 0, 0);
+    delay(4000);
+
+    // check for wrong wired device
+    uint32_t dt = checkPinDischarge(battery1Pins[0]);
+    if (dt < 100) {
+        scanner.setPins(scanner1Pins);
+        batteryMonitor.setPins(battery1Pins);
+        Serial.println("odd device");
+    }
+        Serial.println("passed");
 
     airsoftPoint.set(modules, clusters, clusterSize);
     for (CustomCluster& c : clusters) {

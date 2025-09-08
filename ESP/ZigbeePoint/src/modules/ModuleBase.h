@@ -9,10 +9,15 @@ class ModuleBase {
 public:
     ModuleBase(const uint8_t* pins) : _pins(pins) {}
 
+    // for the 2 odd one out devices
+    void setPins(const uint8_t* pins) { 
+        _pins = pins; 
+    }
+
     void doSetup() {
         if (_setup) return;
-        _setup = true;
         setup();
+        _setup = setupCheck();
     }
     
     void doReceiveData(uint8_t arr[], size_t size) {
@@ -31,6 +36,7 @@ public:
     }
 protected:
     virtual void setup() {}
+    virtual bool setupCheck() { return true; }
     virtual void receiveData(uint8_t arr[], size_t size) {}
     virtual void task() {}
     virtual void loop() {}

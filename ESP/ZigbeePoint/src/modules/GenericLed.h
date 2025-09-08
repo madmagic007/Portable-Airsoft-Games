@@ -39,8 +39,6 @@ public:
     }
 
     void task() override {
-        Serial.printf("%d, %d, %d, %d\n", _r, _g, _b, _dur);
-
         analogWrite(_pinR, _r);
         analogWrite(_pinG, _g);
         analogWrite(_pinB, _b);
