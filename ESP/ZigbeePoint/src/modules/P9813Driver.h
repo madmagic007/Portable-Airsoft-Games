@@ -56,12 +56,23 @@ public:
         latch();
     }
 
+    float getPowerFactor() {
+        if (!_setup) return 0;
+
+        float pc = 0;
+        pc += _r/255;
+        pc += _g/255;
+        pc += _b/255;
+
+        return pc;
+    }
+    
 private:
     void sendBit(bool bitVal) {
-        digitalWrite(_data, bitVal); // data
-        digitalWrite(_clk, LOW);    // clk
+        digitalWrite(_data, bitVal);
+        digitalWrite(_clk, LOW);
         delayMicroseconds(1);
-        digitalWrite(_clk, HIGH);   // clk
+        digitalWrite(_clk, HIGH);
         delayMicroseconds(1);
     }
 

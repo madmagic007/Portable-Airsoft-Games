@@ -7,7 +7,7 @@
 #include "modules/GenericLed.h"
 
 const uint8_t scannerPins[] = {4, 5, 6, 7, 23, 1, 2, 3}; // sda, clk, mosi, miso, rst, R, G, B
-const uint8_t ledDriverPins[] = {14, 15}; // data clk
+const uint8_t ledDriverPins[] = {15, 14}; // data clk
 const uint8_t buzzerPins[] = {20};
 const uint8_t batteryPins[] = {0};
 const uint8_t genericLedPins[] = {14, 15, 20}; // R, G, B
@@ -21,7 +21,7 @@ static AirsoftPoint airsoftPoint(nullptr);
 static Scanner scanner(scannerPins);
 static P9813Driver ledDriver(ledDriverPins);
 static Buzzer buzzer(buzzerPins);
-static BatteryMonitor batteryMonitor(batteryPins);
+static BatteryMonitor batteryMonitor(batteryPins, &ledDriver);
 static GenericLed genericLed(genericLedPins);
 
 static std::map<String, ModuleBase*> modules = {
@@ -34,12 +34,12 @@ static std::map<String, ModuleBase*> modules = {
 };
 
 static CustomCluster clusters[] = {
-    { 2, "airsoftPoint", "data" , "airsoftPoint" }, // x
-    { 3, "scannedTag", "scanTagDuration", "scanner" }, // 0
-    { 4, "", "setDriverColor", "ledDriver" }, // 1
-    { 5, "", "buzz", "buzzer"}, // 2
-    { 6, "battery", "", "battery" }, // 3
-    { 7, "", "setGenericColor", "genericLed" } // 4
+    { 2, "airsoftPoint", "data" , "airsoftPoint" },
+    { 3, "scannedTag", "scanTagDuration", "scanner" },  // 10000
+    { 4, "", "setDriverColor", "ledDriver" },           // 01000
+    { 5, "", "buzz", "buzzer"},                         // 00100
+    { 6, "battery", "batterySettings", "battery" },     // 00010
+    { 7, "", "setGenericColor", "genericLed" }          // 00001
 };
 static size_t clusterSize = sizeof(clusters) / sizeof(clusters[0]);
 
@@ -66,7 +66,7 @@ uint32_t checkPinDischarge(uint8_t pin) {
 void setup() {
     Serial.begin(115200);
     rgbLedWrite(BOARD_LED, 1, 0, 0);
-    delay(4000);
+    delay(2000);
 
     // check for wrong wired device
     uint32_t dt = checkPinDischarge(battery1Pins[0]);
