@@ -20,11 +20,13 @@ public class MQTTHandler {
         mqtt.connect(options);
     }
 
-    public static void subscribe(String endpoint, BiConsumer<String, JSONObject> consumer) throws Exception {
-        mqtt.subscribe("airsoft/" + endpoint, (topic, msg) -> {
-            JSONObject o = new JSONObject(msg.toString());
-            consumer.accept(o.getString("device"), o);
-        });
+    public static void subscribe(String endpoint, BiConsumer<String, JSONObject> consumer) {
+        try {
+            mqtt.subscribe("airsoft/" + endpoint, (topic, msg) -> {
+                JSONObject o = new JSONObject(msg.toString());
+                consumer.accept(o.getString("device"), o);
+            });
+        } catch (Exception ignored) {}
     }
 
     public static void publish(String device, JSONObject post) {
@@ -32,8 +34,17 @@ public class MQTTHandler {
 
         try {
             mqtt.publish("airsoft/" + device + "/set", msg);
+            Thread.sleep(200);
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public static void publish(String device, String topic, String value) {
+        publish(device, new JSONObject().put(topic, value));
+    }
+
+    public static void publish(String device, String topic, Object value) {
+        publish(device, topic, value.toString());
     }
 }

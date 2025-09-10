@@ -1,42 +1,40 @@
-package me.madmagic.devices;
+package me.madmagic.device;
 
 import me.madmagic.mqtt.MQTTHandler;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class DeviceHandler {
 
-    public static Map<String, Device> activeDevices = new HashMap<>();
+    public static Map<String, DeviceBase> activeDevices = new HashMap<>();
 
     public static void init() {
-        MQTTHandler.subscribe("airsoftPoint", (device, payload) -> {
-            System.out.println("Device reported itself: " + device);
-            MQTTHandler.publish(device, "data", "");
-        });
-
         MQTTHandler.subscribe("battery", (deviceName, payload) -> {
-            String data = payload.optString("data", "");
-            Device device = getByName(deviceName);
+            String value = payload.optString("value", "");
+            DeviceBase device = getByName(deviceName);
 
-            if (data.isBlank() || device == null) return;
+            if (value.isBlank() || device == null) return;
 
-            String[] split = data.split("\\|");
-            device.batteryRawVoltage = Float.parseFloat(split[0]);
-            device.batteryCorrectedVoltage = Float.parseFloat(split[1]);
-            device.batteryPercentage = Float.parseFloat(split[2]);
+            device.data.put("battery", value);
         });
     }
 
-    public static Device getByName(String name) {
+    public static DeviceBase getByName(String name) {
         return activeDevices.get(name);
     }
 
-    public static Device getOrCreateByName(String name) {
-        Device device = getByName(name);
+    public static void getByName(String name, Consumer<DeviceBase> callback) {
+        DeviceBase deviceBase = getByName(name);
+        if (deviceBase != null) callback.accept(deviceBase);
+    }
+
+    public static DeviceBase getOrCreateByName(String name) {
+        DeviceBase device = getByName(name);
 
         if (device == null) {
-            device = new Device(name);
+            device = new DeviceBase(name);
             activeDevices.put(name, device);
         }
 

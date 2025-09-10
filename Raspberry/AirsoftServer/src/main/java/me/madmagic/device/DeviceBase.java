@@ -1,23 +1,30 @@
 package me.madmagic.device;
 
 import me.madmagic.mqtt.MQTTHandler;
+import org.json.JSONObject;
 
 import java.util.Arrays;
 
-public class Device {
+public class DeviceBase {
 
     public final String deviceName;
     public int[] modules;
+    public final JSONObject data = new JSONObject();
 
-    public float batteryRawVoltage;
-    public float batteryCorrectedVoltage;
-    public float batteryPercentage;
-
-    public Device(String deviceNam) {
+    public DeviceBase(String deviceNam) {
         this.deviceName = deviceNam;
     }
 
-    public void initializeToMqtt(int... modules) {
+    public void setModules(int... modules) {
+        this.modules = modules;
+    }
+
+    public void sendModulesToMQTT() {
+        if (modules == null || modules.length == 0) {
+            MQTTHandler.publish(deviceName, "data", "");
+            return;
+        }
+
         int max = 0;
         for (int val : modules) {
             if (val > max) max = val;
