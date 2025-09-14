@@ -32,7 +32,7 @@ public class Domination extends GamemodeBase {
 
         registerDevices(capturePoints.values(), medics.values());
 
-        publishMessage("scanTagDuration", 0);
+        publishMessage("scannerSettings", "5|0.5|1"); // 5 second scan, 0.5s buzz, 1s pause
         publishMessage("setDriverColor", "00ff00");
     }
 

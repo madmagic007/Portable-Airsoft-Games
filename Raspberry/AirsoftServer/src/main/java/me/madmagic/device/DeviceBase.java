@@ -58,4 +58,9 @@ public class DeviceBase {
         String hex = String.format("%02X%02X%02X", r, g, b);
         MQTTHandler.publish(deviceName, "setGenericColor", hex);
     }
+
+    public void setScannerSettings(float scanDuration, float buzzDuration, float buzzPause) {
+        String msg = String.format("%f|%f|%f", scanDuration, buzzDuration, buzzPause);
+        MQTTHandler.publish(deviceName, "scannerSettings", msg);
+    }
 }
