@@ -33,9 +33,10 @@ public:
         memcpy(buf, arr, size);
         buf[size] = '\0';
         
-        uint8_t n = sscanf(buf, "%f|%f", &_delaySec, &_buzzInterval);
+        uint8_t n = sscanf(buf, "%f|%f|%f", &_delaySec, &_buzzDuration, &_buzzInterval);
 
         if (n == 1) {
+            _buzzDuration = 0;
             _buzzInterval = 0;
         }
 
@@ -127,14 +128,21 @@ private:
                 }
             }
 
-            if (_cardPresent && _buzzInterval > 0) {
-                unsigned long elapsed = millis() - _lastBuzz;
+            if (_cardPresent && _buzzInterval > 0 && _buzzDuration > 0) {
+                unsigned long now = millis();
 
-                if (elapsed > 1000 * _buzzInterval) {
-                    _lastBuzz = millis();
-
-                    digitalWrite(_buzzer, !_buzzState);
-                    _buzzState = !_buzzState;
+                if (_buzzState) {
+                    if (now - _lastBuzz >= _buzzDuration) {
+                        digitalWrite(_buzzer, LOW);
+                        _buzzState = false;
+                        _lastBuzz = now;
+                    }
+                } else {
+                    if (now - _lastBuzz >= _buzzInterval) {
+                        digitalWrite(_buzzer, HIGH);
+                        _buzzState = true;
+                        _lastBuzz = now;
+                    }
                 }
             }
 
@@ -145,10 +153,8 @@ private:
     MFRC522* _mfrc522;
     uint8_t _rst, _r, _g, _b, _buzzer;
     float _delaySec = -1;
-    float _buzzInterval = 0;
-    bool _cardPresent = false;
-    bool _cardRemoved = false;
-    bool _buzzState;
+    float _buzzDuration, _buzzInterval;
+    bool _cardPresent, _cardRemoved, _buzzState;
     unsigned long _cardStartTime = 0;
     unsigned long _lastSeen = 0;
     unsigned long _lastScanned = 0;
