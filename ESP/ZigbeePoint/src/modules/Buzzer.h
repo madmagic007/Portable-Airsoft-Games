@@ -16,17 +16,17 @@ public:
         char buf[size + 1];
         memcpy(buf, arr, size);
         buf[size] = '\0';
-        buzzDuration = atoi(buf);
+        
+        _buzzDuration = atof(buf);
         
         startTask("buzzerTask");
     }
 
     void task() override {
         digitalWrite(_pins[0], HIGH);
-        vTaskDelay(pdMS_TO_TICKS(1000 * buzzDuration));
+        delay(seconds * 1000);
         digitalWrite(_pins[0], LOW);
     }
-
 private:
-    uint8_t buzzDuration = 0;
+    float _buzzDuration = 0;
 };

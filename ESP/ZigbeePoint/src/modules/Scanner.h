@@ -13,6 +13,7 @@ public:
         _r = _pins[5];
         _g = _pins[6];
         _b = _pins[7];
+        _buzzer = pins[8];
 
         pinMode(_rst, OUTPUT);
         digitalWrite(_rst, HIGH);
@@ -24,13 +25,19 @@ public:
         pinOutput(_r);
         pinOutput(_g);
         pinOutput(_b);
+        pinOutput(_buzzer);
     }
 
     void receiveData(uint8_t arr[], size_t size) override {
         char buf[size + 1];
         memcpy(buf, arr, size);
         buf[size] = '\0';
-        _delaySec = atoi(buf);
+        
+        uint8_t n = sscanf(buf, "%f|%f", &_delaySec, &_buzzInterval);
+
+        if (n == 1) {
+            _buzzInterval = 0;
+        }
 
         digitalWrite(_rst, LOW);
 
@@ -58,7 +65,6 @@ public:
         if (_delaySec < 0) return;
 
         if (_mfrc522->PICC_IsNewCardPresent() && _mfrc522->PICC_ReadCardSerial()) {
-
             String uidStr = "";
             for (byte i = 0; i < _mfrc522->uid.size; i++) {
                 if (_mfrc522->uid.uidByte[i] < 0x10) uidStr += "0";
@@ -97,6 +103,7 @@ private:
                     digitalWrite(_r, LOW);
                     digitalWrite(_g, LOW);
                     digitalWrite(_b, HIGH);
+                    digitalWrite(_buzzer, LOW);
 
                     _lastScanned = millis();
                     _cardPresent = false;
@@ -107,6 +114,7 @@ private:
                     digitalWrite(_r, HIGH);
                     digitalWrite(_g, LOW);
                     digitalWrite(_b, LOW);
+                    digitalWrite(_buzzer, LOW);
 
                     vTaskDelay(pdMS_TO_TICKS(500));
 
@@ -119,17 +127,31 @@ private:
                 }
             }
 
+            if (_cardPresent && _buzzInterval > 0) {
+                unsigned long elapsed = millis() - _lastBuzz;
+
+                if (elapsed > 1000 * _buzzInterval) {
+                    _lastBuzz = millis();
+
+                    digitalWrite(_buzzer, !_buzzState);
+                    _buzzState = !_buzzState;
+                }
+            }
+
             vTaskDelay(pdMS_TO_TICKS(50));
         }
     }
 
-    MFRC522* _mfrc522 = nullptr;
-    uint8_t _rst, _r, _g, _b;
-    int8_t _delaySec = -1;
+    MFRC522* _mfrc522;
+    uint8_t _rst, _r, _g, _b, _buzzer;
+    float _delaySec = -1;
+    float _buzzInterval = 0;
     bool _cardPresent = false;
     bool _cardRemoved = false;
+    bool _buzzState;
     unsigned long _cardStartTime = 0;
     unsigned long _lastSeen = 0;
     unsigned long _lastScanned = 0;
+    unsigned long _lastBuzz = 0;
     String _lastUID = "";
 };

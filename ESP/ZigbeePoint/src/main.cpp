@@ -6,7 +6,7 @@
 #include "modules/BatteryMonitor.h"
 #include "modules/GenericLed.h"
 
-const uint8_t scannerPins[] = {4, 5, 6, 7, 23, 1, 2, 3}; // sda, clk, mosi, miso, rst, R, G, B
+const uint8_t scannerPins[] = {4, 5, 6, 7, 23, 1, 2, 3, 20}; // sda, clk, mosi, miso, rst, R, G, B, buzzer
 const uint8_t ledDriverPins[] = {15, 14}; // data clk
 const uint8_t buzzerPins[] = {20};
 const uint8_t batteryPins[] = {0};
