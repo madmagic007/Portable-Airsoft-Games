@@ -1,17 +1,14 @@
 package me.madmagic.gamemode;
 
 import me.madmagic.device.DeviceBase;
-import me.madmagic.mqtt.MQTTHandler;
+import me.madmagic.device.DeviceCollection;
 import org.json.JSONObject;
 
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public abstract class GamemodeBase {
 
-    protected final Map<String, DeviceBase> devices = new HashMap<>();
+    protected final DeviceCollection devices = new DeviceCollection();
 
     @SafeVarargs
     protected final void registerDevices(Collection<DeviceBase>... withDevices) {
@@ -21,6 +18,7 @@ public abstract class GamemodeBase {
             for (DeviceBase device : collection) {
                 devices.put(device.deviceName, device);
                 device.sendModulesToMQTT();
+                device.applyData();
             }
         }
     }
@@ -31,24 +29,7 @@ public abstract class GamemodeBase {
     }
 
 
-    public void stop() {
-        publishMessage("scanTagDuration", -1);
-    }
-
     public abstract void start(JSONObject configuration);
+    public abstract void stop();
     public abstract void onTagScanned(DeviceBase device, String value);
-
-    public void publishMessage(String topic, Object value, String... devices) {
-        if (devices == null || devices.length == 0) {
-            this.devices.keySet().forEach(deviceName -> {
-                MQTTHandler.publish(deviceName, topic, value);
-            });
-        } else {
-            List<String> names = List.of(devices);
-
-            this.devices.keySet().stream().filter(names::contains).forEach(deviceName -> {
-                MQTTHandler.publish(deviceName, topic, value);
-            });
-        }
-    }
 }

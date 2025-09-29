@@ -28,9 +28,9 @@ jar {
 
 remotes {
     rb4 {
-        host = 'rb4.local'   // will match your ~/.ssh/config entry
-        user = 'MadMagic'    // technically redundant if ssh config sets User
-        identity = file(System.getProperty("user.home") + "/.ssh/rb4")
+        host = 'airsoftpi.local'   // will match your ~/.ssh/config entry
+        user = 'pi'    // technically redundant if ssh config sets User
+        identity = file(System.getProperty("user.home") + "/.ssh/id_ed25519")
     }
 }
 
@@ -41,7 +41,7 @@ tasks.register('FTPUpload') {
         def jarFile = tasks.named('jar').get().archiveFile.get().asFile
         ssh.run {
             session(remotes.rb4) {
-                put from: jarFile, into: '/home/MadMagic/jars/'
+                put from: jarFile, into: '/home/pi/AirsoftRegister.jar'
                 //execute 'java --enable-native-access=ALL-UNNAMED -jar /home/MadMagic/jars/AirsoftRegister.jar --enable-native-access=ALL-UNNAMED'
             }
         }

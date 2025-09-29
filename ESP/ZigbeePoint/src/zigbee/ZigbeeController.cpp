@@ -7,6 +7,7 @@ void ZigbeeController::setup(CustomCluster* clusters, size_t size) {
 
     ZigbeeRangeExtender extender(1);
     extender.setManufacturerAndModel("MadMagic", "AirsoftPoint");
+    extender.setPowerSource(ZB_POWER_SOURCE_MAINS);
     Zigbee.addEndpoint(&extender);
 
     for (size_t i = 0; i < size; i++) {

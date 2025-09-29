@@ -35,7 +35,7 @@ static std::map<String, ModuleBase*> modules = {
 
 static CustomCluster clusters[] = {
     { 2, "airsoftPoint", "data" , "airsoftPoint" },
-    { 3, "scannedTag", "scanTagDuration", "scanner" },  // 10000
+    { 3, "scannedTag", "scannerSettings", "scanner" },  // 10000
     { 4, "", "setDriverColor", "ledDriver" },           // 01000
     { 5, "", "buzz", "buzzer"},                         // 00100
     { 6, "battery", "batterySettings", "battery" },     // 00010

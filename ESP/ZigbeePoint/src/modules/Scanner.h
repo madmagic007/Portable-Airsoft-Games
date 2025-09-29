@@ -13,7 +13,7 @@ public:
         _r = _pins[5];
         _g = _pins[6];
         _b = _pins[7];
-        _buzzer = pins[8];
+        _buzzer = _pins[8];
 
         pinMode(_rst, OUTPUT);
         digitalWrite(_rst, HIGH);
@@ -33,11 +33,11 @@ public:
         memcpy(buf, arr, size);
         buf[size] = '\0';
         
-        uint8_t n = sscanf(buf, "%f|%f|%f", &_delaySec, &_buzzDuration, &_buzzInterval);
+        uint8_t n = sscanf(buf, "%f|%f|%f", &_delaySec, &_buzzDuration, &_buzzPause);
 
         if (n == 1) {
             _buzzDuration = 0;
-            _buzzInterval = 0;
+            _buzzPause = 0;
         }
 
         digitalWrite(_rst, LOW);
@@ -77,6 +77,7 @@ public:
 
             if (!_cardPresent && _lastSeen - _lastScanned > 2000) {
                 _cardPresent = true;
+                _buzzState = false;
                 _cardStartTime = _lastSeen;
 
                 digitalWrite(_r, LOW);
@@ -128,17 +129,17 @@ private:
                 }
             }
 
-            if (_cardPresent && _buzzInterval > 0 && _buzzDuration > 0) {
+            if (_cardPresent && _buzzPause > 0 && _buzzDuration > 0) {
                 unsigned long now = millis();
 
                 if (_buzzState) {
-                    if (now - _lastBuzz >= _buzzDuration) {
+                    if (now - _lastBuzz >= _buzzDuration * 1000UL) {
                         digitalWrite(_buzzer, LOW);
                         _buzzState = false;
                         _lastBuzz = now;
                     }
                 } else {
-                    if (now - _lastBuzz >= _buzzInterval) {
+                    if (now - _lastBuzz >= _buzzPause * 1000UL) {
                         digitalWrite(_buzzer, HIGH);
                         _buzzState = true;
                         _lastBuzz = now;
@@ -153,7 +154,7 @@ private:
     MFRC522* _mfrc522;
     uint8_t _rst, _r, _g, _b, _buzzer;
     float _delaySec = -1;
-    float _buzzDuration, _buzzInterval;
+    float _buzzDuration, _buzzPause;
     bool _cardPresent, _cardRemoved, _buzzState;
     unsigned long _cardStartTime = 0;
     unsigned long _lastSeen = 0;

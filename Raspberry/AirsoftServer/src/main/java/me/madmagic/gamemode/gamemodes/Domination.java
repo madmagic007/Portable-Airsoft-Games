@@ -1,39 +1,49 @@
 package me.madmagic.gamemode.gamemodes;
 
 import me.madmagic.device.DeviceBase;
+import me.madmagic.device.DeviceCollection;
 import me.madmagic.device.DeviceHandler;
 import me.madmagic.device.DeviceModule;
 import me.madmagic.gamemode.GamemodeBase;
-import org.json.JSONArray;
+import me.madmagic.mqtt.MQTTMessage;
 import org.json.JSONObject;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class Domination extends GamemodeBase {
 
-    private final Map<String, DeviceBase> capturePoints = new HashMap<>();
-    private final Map<String, DeviceBase> medics = new HashMap<>();
-
+    private final DeviceCollection capturePoints = new DeviceCollection();
+    private final DeviceCollection medics = new DeviceCollection();
 
     @Override
     public void start(JSONObject configuration) {
         capturePoints.clear();
         medics.clear();
 
-        JSONArray capturePointNames = configuration.getJSONObject("devices").getJSONArray("capturePoints");
-        for (Object capturePoint : capturePointNames) {
-            if (!(capturePoint instanceof String str)) continue;
+        JSONObject devices = configuration.getJSONObject("devices");
 
-            DeviceBase device = DeviceHandler.getOrCreateByName(str);
+        JSONObject capturePoints = devices.getJSONObject("capturePoints");
+        JSONObject capturePointDevices = capturePoints.getJSONObject("devices");
+        JSONObject capturePointDeviceData = capturePoints.optJSONObject("data", new JSONObject());
+
+        capturePointDevices.keySet().forEach(deviceName -> {
+            JSONObject deviceData = capturePointDevices.getJSONObject(deviceName);
+
+            DeviceBase device = DeviceHandler.getOrCreateByName(deviceName);
             device.setModules(DeviceModule.CAPTURE_POINT);
-            capturePoints.put(str, device);
-        }
+            device.mergeData(deviceData);
+            device.mergeData(capturePointDeviceData);
 
-        registerDevices(capturePoints.values(), medics.values());
+            this.capturePoints.put(deviceName, device);
+        });
 
-        publishMessage("scannerSettings", "5|0.5|1"); // 5 second scan, 0.5s buzz, 1s pause
-        publishMessage("setDriverColor", "00ff00");
+        // stores devices in GamemodeBase, registers their modules to mqtt and applies certain data
+        registerDevices(this.capturePoints.values(), this.medics.values());
+    }
+
+    @Override
+    public void stop() {
+        devices.publishToAll(MQTTMessage.SCANNER_SETTINGS, "-1");
+        capturePoints.publishToAll(MQTTMessage.DRIVER_COLOR, "000000");
+        medics.publishToAll(MQTTMessage.GENERIC_COLOR, "000000");
     }
 
     @Override

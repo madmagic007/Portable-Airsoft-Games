@@ -1,6 +1,8 @@
 package me.madmagic.mqtt;
 
-public enum MQTTMessages {
+import org.json.JSONObject;
+
+public enum MQTTMessage {
     SCANNER_SETTINGS("scannerSettings"),
     DRIVER_COLOR("setDriverColor"),
     BUZZ("buzz"),
@@ -8,11 +10,15 @@ public enum MQTTMessages {
 
     private final String topic;
 
-    MQTTMessages(String topic) {
+    MQTTMessage(String topic) {
         this.topic = topic;
     }
 
     public void publish(String deviceName, Object value) {
         MQTTHandler.publish(deviceName, topic, value);
+    }
+
+    public void publishIfInData(String deviceName, JSONObject data) {
+        if (data.has(topic)) publish(deviceName, data.get(topic));
     }
 }

@@ -1,6 +1,7 @@
 package me.madmagic.device;
 
 import me.madmagic.mqtt.MQTTHandler;
+import me.madmagic.mqtt.MQTTMessage;
 import org.json.JSONObject;
 
 import java.util.Arrays;
@@ -17,6 +18,12 @@ public class DeviceBase {
 
     public void setModules(int... modules) {
         this.modules = modules;
+    }
+
+    public void mergeData(JSONObject data) {
+        data.keySet().forEach(key -> {
+            this.data.put(key, data.get(key));
+        });
     }
 
     public void sendModulesToMQTT() {
@@ -40,13 +47,24 @@ public class DeviceBase {
         MQTTHandler.publish(deviceName, "data", new String(result));
     }
 
+    public void applyData() {
+        MQTTMessage.SCANNER_SETTINGS.publishIfInData(deviceName, data);
+        MQTTMessage.DRIVER_COLOR.publishIfInData(deviceName, data);
+        MQTTMessage.GENERIC_COLOR.publishIfInData(deviceName, data);
+    }
+
+    public void setScannerSettings(float scanDuration, float buzzDuration, float buzzPause) {
+        String msg = String.format("%f|%f|%f", scanDuration, buzzDuration, buzzPause);
+        MQTTMessage.SCANNER_SETTINGS.publish(deviceName, msg);
+    }
+
     public void setDriverColor(int r, int g, int b) {
         String hex = String.format("%02X%02X%02X", r, g, b);
-        MQTTHandler.publish(deviceName, "setDriverColor", hex);
+        MQTTMessage.DRIVER_COLOR.publish(deviceName, hex);
     }
 
     public void buzz(int durationSeconds) {
-        MQTTHandler.publish(deviceName, "buzz", durationSeconds);
+        MQTTMessage.BUZZ.publish(deviceName, durationSeconds);
     }
 
     public void setDriverColorAndBuzz(int r, int g, int b, int durationSeconds) {
@@ -56,11 +74,6 @@ public class DeviceBase {
 
     public void setGenericColor(int r, int g, int b) {
         String hex = String.format("%02X%02X%02X", r, g, b);
-        MQTTHandler.publish(deviceName, "setGenericColor", hex);
-    }
-
-    public void setScannerSettings(float scanDuration, float buzzDuration, float buzzPause) {
-        String msg = String.format("%f|%f|%f", scanDuration, buzzDuration, buzzPause);
-        MQTTHandler.publish(deviceName, "scannerSettings", msg);
+        MQTTMessage.GENERIC_COLOR.publish(deviceName, hex);
     }
 }

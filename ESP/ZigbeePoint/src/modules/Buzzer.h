@@ -24,7 +24,7 @@ public:
 
     void task() override {
         digitalWrite(_pins[0], HIGH);
-        delay(seconds * 1000);
+        delay(_buzzDuration * 1000);
         digitalWrite(_pins[0], LOW);
     }
 private:
