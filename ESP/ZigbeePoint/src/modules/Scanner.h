@@ -65,71 +65,92 @@ public:
     void loop() {
         if (_delaySec < 0) return;
 
-        if (_mfrc522->PICC_IsNewCardPresent() && _mfrc522->PICC_ReadCardSerial()) {
-            String uidStr = "";
-            for (byte i = 0; i < _mfrc522->uid.size; i++) {
-                if (_mfrc522->uid.uidByte[i] < 0x10) uidStr += "0";
-                uidStr += String(_mfrc522->uid.uidByte[i], HEX);
-            }
+        bool present = _mfrc522->PICC_IsNewCardPresent() && _mfrc522->PICC_ReadCardSerial();
+        unsigned long now = millis();
 
-            _lastUID = uidStr;
-            _lastSeen = millis();
+        switch (_cardState) {
+            case WAIT:
+                if (present) {
+                    _cardDetectedTime = now;
+                    _cardAbsentStart = 0;
+                    _cardState = DETECTED;
 
-            if (!_cardPresent && _lastSeen - _lastScanned > 2000) {
-                _cardPresent = true;
-                _buzzState = false;
-                _cardStartTime = _lastSeen;
+                    String uidStr = "";
+                    for (byte i = 0; i < _mfrc522->uid.size; i++) {
+                        if (_mfrc522->uid.uidByte[i] < 0x10) uidStr += "0";
+                        uidStr += String(_mfrc522->uid.uidByte[i], HEX);
+                    }
 
-                digitalWrite(_r, LOW);
-                digitalWrite(_g, HIGH);
-                digitalWrite(_b, LOW);
-            }
-        } else {
-            if (_cardPresent && millis() - _lastSeen > 200) {
-                _cardRemoved = true;
-            }
+                    _lastUID = uidStr;
+                    _buzzState = false;
+
+                    digitalWrite(_r, LOW);
+                    digitalWrite(_g, HIGH);
+                    digitalWrite(_b, LOW);
+                }
+                break;
+
+            case DETECTED:
+                if (!present) {
+                    if (_cardAbsentStart == 0) _cardAbsentStart = now;
+                    else if (now - _cardAbsentStart >= 200) {
+                        _command = FAIL; 
+                        _cardState = WAIT_REMOVED;
+                        _cardAbsentStart = now;
+                    }
+                } else {
+                    if (now - _cardDetectedTime >= _delaySec * 1000UL) {
+                        _command = REPORT; 
+                        _cardState = WAIT_REMOVED;
+                        _cardAbsentStart = 0;
+                    }
+                }
+                break;
+
+            case WAIT_REMOVED:
+                if (!present) {
+                    if (_cardAbsentStart == 0) _cardAbsentStart = now;
+                    else if (now - _cardAbsentStart >= 200) { // 200ms before we consider a card removed
+                        _cardState = WAIT;
+                        _cardAbsentStart = 0;
+                    }
+                } else {
+                    _cardAbsentStart = 0;
+                }
+                break;
         }
     }
 
 private:
     void task() {
         while (true) {
-            if (_cardPresent && _delaySec >= 0) {
-                unsigned long elapsed = millis() - _cardStartTime;
+            if (_command == REPORT) {
+                _command = NONE;
+                reportValue(_lastUID);
+                Serial.println("reporting value");
 
-                if (elapsed >= _delaySec * 1000) {
-                    reportValue(_lastUID);
+                if (_delaySec == 0) vTaskDelay(pdMS_TO_TICKS(200)); // visible blink
 
-                    if (_delaySec == 0) vTaskDelay(pdMS_TO_TICKS(200)); // visible blink
+                digitalWrite(_r, LOW);
+                digitalWrite(_g, LOW);
+                digitalWrite(_b, HIGH);
+                digitalWrite(_buzzer, LOW);
+            } else if (_command == FAIL) {
+                _command = NONE;
 
-                    digitalWrite(_r, LOW);
-                    digitalWrite(_g, LOW);
-                    digitalWrite(_b, HIGH);
-                    digitalWrite(_buzzer, LOW);
+                digitalWrite(_r, HIGH);
+                digitalWrite(_g, LOW);
+                digitalWrite(_b, LOW);
+                digitalWrite(_buzzer, LOW);
 
-                    _lastScanned = millis();
-                    _cardPresent = false;
-                    _cardRemoved = false;
+                vTaskDelay(pdMS_TO_TICKS(500));
 
-                    _mfrc522->PICC_HaltA(); // now we call halta to stop it from scanning again
-                } else if (_cardRemoved) {
-                    digitalWrite(_r, HIGH);
-                    digitalWrite(_g, LOW);
-                    digitalWrite(_b, LOW);
-                    digitalWrite(_buzzer, LOW);
-
-                    vTaskDelay(pdMS_TO_TICKS(500));
-
-                    digitalWrite(_r, LOW);
-                    digitalWrite(_g, LOW);
-                    digitalWrite(_b, HIGH);
-                    
-                    _cardPresent = false;
-                    _cardRemoved = false;
-                }
+                digitalWrite(_r, LOW);
+                digitalWrite(_g, LOW);
+                digitalWrite(_b, HIGH);
             }
 
-            if (_cardPresent && _buzzPause > 0 && _buzzDuration > 0) {
+            if (_cardState == DETECTED && _buzzPause > 0 && _buzzDuration > 0) {
                 unsigned long now = millis();
 
                 if (_buzzState) {
@@ -155,10 +176,24 @@ private:
     uint8_t _rst, _r, _g, _b, _buzzer;
     float _delaySec = -1;
     float _buzzDuration, _buzzPause;
-    bool _cardPresent, _cardRemoved, _buzzState;
-    unsigned long _cardStartTime = 0;
-    unsigned long _lastSeen = 0;
-    unsigned long _lastScanned = 0;
+    bool _buzzState;
     unsigned long _lastBuzz = 0;
+    unsigned long _cardDetectedTime = 0;
+    unsigned long _cardAbsentStart = 0;
     String _lastUID = "";
+
+    enum CardState{
+        WAIT,
+        DETECTED,
+        WAIT_REMOVED
+    };
+
+    enum TaskCommand {
+        NONE,
+        REPORT,
+        FAIL
+    };
+
+    CardState _cardState = WAIT;
+    TaskCommand _command = NONE;
 };

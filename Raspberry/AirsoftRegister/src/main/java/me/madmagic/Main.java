@@ -64,7 +64,7 @@ public class Main {
                             led.off();
                         }).start();
 
-                        String uidStr = Hex.encodeHexString(uid.getUidBytes());
+                        String uidStr = Hex.encodeHexString(uid.getUidBytes()).toLowerCase();
                         System.out.printf("Card scanned: %s\n", uidStr);
 
                         System.out.print("Choose nickname: ");
@@ -109,7 +109,7 @@ public class Main {
 
     public static void writeJson(JSONObject obj, String path) throws Exception {
         try (OutputStream os = new FileOutputStream(path)) {
-            byte[] data = obj.toString(2).getBytes(StandardCharsets.UTF_8);
+            byte[] data = obj.toString(4).getBytes(StandardCharsets.UTF_8);
             os.write(data);
         }
     }

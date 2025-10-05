@@ -18,40 +18,49 @@ public:
     }
 
     void receiveData(uint8_t arr[], size_t size) override {
-        if (size < 6) return;
+        char buf[size + 1];
+        memcpy(buf, arr, size);
+        buf[size] = '\0';
         
         uint8_t cols[3];
-        Util::hexStringToBytes(arr, cols, 6);
+        uint8_t hexStr[6];
+        _blinkCount = 0;
+        _onDuration = 0;
+        _pause = 0;
 
+        int n = sscanf(buf, "%6s|%f|%hhu|%f", hexStr, &_onDuration, &_blinkCount, &_pause);
+        if (n == 0 || n == 3) return;
+
+        Util::hexStringToBytes(arr, cols, 6);
         _r = cols[0];
         _g = cols[1];
         _b = cols[2];
-        _dur = 0;
-
-        if (size > 6) {
-            for (size_t i = 6; i < size; ++i) {
-                char c = arr[i];
-                _dur = _dur * 10 + (c - '0');
-            }
-        }
         
         startTask("genericLedTask");
     }
 
     void task() override {
-        analogWrite(_pinR, _r);
-        analogWrite(_pinG, _g);
-        analogWrite(_pinB, _b);
+        uint8_t i = 0;
+        do {
+            writeCol(_r, _g, _b);
 
-        if (_dur == 0) return;
-        vTaskDelay(pdMS_TO_TICKS(_dur));
+            if (_onDuration == 0) return;
 
-        analogWrite(_pinR, 0);
-        analogWrite(_pinG, 0);
-        analogWrite(_pinB, 0);
+            delay(_onDuration * 1000);
+            writeCol(0, 0, 0);
+            delay(_pause * 1000);
+
+            i++;
+        } while ((i < _blinkCount || _blinkCount == 255) && !_stop);
     }
 private:
     uint8_t _pinR, _pinG, _pinB;
-    uint8_t _r, _g, _b;
-    uint16_t _dur;
+    uint8_t _r, _g, _b, _blinkCount;
+    float _onDuration, _pause;
+
+    void writeCol(uint8_t r, uint8_t g, uint8_t b) {
+        analogWrite(_pinR, r);
+        analogWrite(_pinG, g);
+        analogWrite(_pinB, b);
+    }
 };

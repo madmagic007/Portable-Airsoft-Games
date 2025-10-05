@@ -1,9 +1,11 @@
 package me.madmagic.gamemode;
 
+import me.madmagic.StatsHandler;
 import me.madmagic.device.DeviceBase;
 import me.madmagic.device.DeviceHandler;
 import me.madmagic.device.DeviceModule;
 import me.madmagic.gamemode.gamemodes.Domination;
+import me.madmagic.gamemode.gamemodes.Medics;
 import me.madmagic.mqtt.MQTTHandler;
 import org.json.JSONObject;
 
@@ -13,6 +15,7 @@ import java.util.Map;
 public class GamemodesHandler {
     public static final Map<String, GamemodeBase> gamemodes = new HashMap<>() {{
         put("domination", new Domination());
+        put("medics", new Medics());
     }};
     public static GamemodeBase activeGamemode;
 
@@ -47,13 +50,22 @@ public class GamemodesHandler {
     }
 
     public static void startGamemode(JSONObject configuration) {
-        String gamemodeName = configuration.getString("gamemodeName");
+        String gamemodeName = configuration.optString("gamemodeName", "");
+
+        if (gamemodeName.isEmpty()) {
+            System.out.println("No gamemode name is specified in the json");
+            return;
+        }
 
         GamemodeBase gamemode = gamemodes.get(gamemodeName);
-        if (gamemode == null) return;
+        if (gamemode == null) {
+            System.out.printf("Gamemode '%s' is not valid\n", gamemodeName);
+            return;
+        }
 
-        System.out.println("Starting gamemode: " + configuration.toString(4));
-        gamemode.start(configuration);
+        System.out.println("Starting gamemode:\n" + configuration.toString(4));
+        StatsHandler.newStats(gamemodeName);
+        gamemode.startWrapper(configuration);
         activeGamemode = gamemode;
     }
 }

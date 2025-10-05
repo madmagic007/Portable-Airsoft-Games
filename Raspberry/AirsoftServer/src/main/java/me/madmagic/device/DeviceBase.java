@@ -76,4 +76,8 @@ public class DeviceBase {
         String hex = String.format("%02X%02X%02X", r, g, b);
         MQTTMessage.GENERIC_COLOR.publish(deviceName, hex);
     }
+
+    public void genericColorFromData(String key) {
+        MQTTMessage.GENERIC_COLOR.publish(deviceName, data.optString(key, "000000"));
+    }
 }

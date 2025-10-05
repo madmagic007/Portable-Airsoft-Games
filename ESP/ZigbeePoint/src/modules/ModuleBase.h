@@ -54,6 +54,12 @@ protected:
 
     void startTask(String name) {
         if (!_setup) return;
+
+        if (_taskHandle) {            
+            _stop = true;
+            _taskHandle = nullptr;
+        }
+
         xTaskCreate(taskWrapper, name.c_str(), 4096, this, 1, &_taskHandle);
     }
 
@@ -64,8 +70,9 @@ protected:
 
     static void taskWrapper(void* pvParameters) {
         ModuleBase* instance = static_cast<ModuleBase*>(pvParameters);
+        instance->_stop = false;
         instance->task();
-        instance->stopTask();
+        vTaskDelete(NULL);
     }
 
     void pinOutput(uint8_t pin, uint8_t defaultVal = LOW) {
@@ -75,6 +82,7 @@ protected:
 
     const uint8_t* _pins;
     bool _setup = false;
+    volatile bool _stop = true;
 
     TaskHandle_t _taskHandle = nullptr;
     ReportCallback _reportCB = nullptr;

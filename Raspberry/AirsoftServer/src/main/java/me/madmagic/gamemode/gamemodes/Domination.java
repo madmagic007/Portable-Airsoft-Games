@@ -29,8 +29,8 @@ public class Domination extends GamemodeBase {
 
             DeviceBase device = DeviceHandler.getOrCreateByName(deviceName);
             device.setModules(DeviceModule.CAPTURE_POINT);
-            device.mergeData(deviceData);
             device.mergeData(capturePointDeviceData);
+            device.mergeData(deviceData);
 
             this.capturePoints.put(deviceName, device);
         });

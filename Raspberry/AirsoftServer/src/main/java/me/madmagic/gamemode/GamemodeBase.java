@@ -9,6 +9,7 @@ import java.util.Collection;
 public abstract class GamemodeBase {
 
     protected final DeviceCollection devices = new DeviceCollection();
+    protected JSONObject configuration;
 
     @SafeVarargs
     protected final void registerDevices(Collection<DeviceBase>... withDevices) {
@@ -24,10 +25,15 @@ public abstract class GamemodeBase {
     }
 
     public void checkReceivedData(String deviceName, String data) {
+        System.out.printf("Tag '%s' from '%s'\n", data, deviceName);
         if (!devices.containsKey(deviceName)) return;
         onTagScanned(devices.get(deviceName), data);
     }
 
+    public void startWrapper(JSONObject configuration) {
+        this.configuration = configuration;
+        start(configuration);
+    }
 
     public abstract void start(JSONObject configuration);
     public abstract void stop();
