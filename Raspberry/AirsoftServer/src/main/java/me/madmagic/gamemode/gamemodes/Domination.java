@@ -1,5 +1,6 @@
 package me.madmagic.gamemode.gamemodes;
 
+import me.madmagic.StatsHandler;
 import me.madmagic.device.DeviceBase;
 import me.madmagic.device.DeviceCollection;
 import me.madmagic.device.DeviceHandler;
@@ -48,17 +49,35 @@ public class Domination extends GamemodeBase {
 
     @Override
     public void onTagScanned(DeviceBase device, String value) {
-        String currentTeam = device.data.optString("capturedBy", "");
-        String scannerTeam = value.equals("b4b38189") ? "red" : "blue";
+        String userTeam = StatsHandler.getTeam(value);
 
-        if (!currentTeam.equals(scannerTeam)) {
-            if (scannerTeam.equals("red")) {
-                device.setDriverColorAndBuzz(255, 0, 0, 1);
-            } else {
-                device.setDriverColorAndBuzz(0, 0, 255, 1);
+        if (medics.containsDevice(device)) {
+            if (!userTeam.equals(device.data.getString("team"))) {
+                device.genericColorFromData("failBlink");
+                return;
             }
 
-            device.data.put("capturedBy", scannerTeam);
+            int curReviveCount = StatsHandler.getNumericStat(value, "revives");
+
+            if (curReviveCount >= device.data.optInt("maxRevives")) {
+                device.genericColorFromData("failBlink");
+                return;
+            }
+
+            StatsHandler.incNumericStat(value, "revives");
+            device.genericColorFromData("reviveBlink");
+
+        } else if (capturePoints.containsDevice(device)) {
+            String currentTeam = device.data.optString("capturedBy", "");
+            if (currentTeam.equals(userTeam)) return;
+
+            String teamColTag = "colTeam_" + userTeam;
+            device.setDriverColorFromData(teamColTag);
+            device.buzz(2);
+
+            System.out.printf("capture point %s captured by %s (%s)\n", device.deviceName, value, userTeam);
+            device.data.put("capturedBy", userTeam);
+
         }
     }
 }

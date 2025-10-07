@@ -42,6 +42,8 @@ public class Medics extends GamemodeBase {
 
     @Override
     public void onTagScanned(DeviceBase device, String value) {
+        if (!medics.containsDevice(device)) return;
+
         String userTeam = StatsHandler.getTeam(value);
 
         if (!userTeam.equals(device.data.getString("team"))) {

@@ -74,6 +74,7 @@ public:
                     _cardDetectedTime = now;
                     _cardAbsentStart = 0;
                     _cardState = DETECTED;
+                    Serial.println("detected");
 
                     String uidStr = "";
                     for (byte i = 0; i < _mfrc522->uid.size; i++) {
@@ -92,17 +93,20 @@ public:
 
             case DETECTED:
                 if (!present) {
+                    Serial.println("not present");
                     if (_cardAbsentStart == 0) _cardAbsentStart = now;
                     else if (now - _cardAbsentStart >= 200) {
+                    Serial.println("not present for 200ms");
                         _command = FAIL; 
                         _cardState = WAIT_REMOVED;
                         _cardAbsentStart = now;
                     }
                 } else {
+                    Serial.println("detected and present");
+                    _cardAbsentStart = 0;
                     if (now - _cardDetectedTime >= _delaySec * 1000UL) {
                         _command = REPORT; 
                         _cardState = WAIT_REMOVED;
-                        _cardAbsentStart = 0;
                     }
                 }
                 break;

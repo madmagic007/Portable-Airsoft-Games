@@ -1,9 +1,7 @@
 package me.madmagic.gamemode;
 
 import me.madmagic.StatsHandler;
-import me.madmagic.device.DeviceBase;
 import me.madmagic.device.DeviceHandler;
-import me.madmagic.device.DeviceModule;
 import me.madmagic.gamemode.gamemodes.Domination;
 import me.madmagic.gamemode.gamemodes.Medics;
 import me.madmagic.mqtt.MQTTHandler;
@@ -23,20 +21,14 @@ public class GamemodesHandler {
         MQTTHandler.subscribe("airsoftPoint", (device, payload) -> {
             System.out.println("Device reported itself: " + device);
 
-            try {
-                DeviceBase d = DeviceHandler.getOrCreateByName(device);
-                d.setModules(DeviceModule.GENERIC);
-                d.sendModulesToMQTT();
-                MQTTHandler.publish(device, "scannerSettings", "0");
-                MQTTHandler.publish(device, "setGenericColor", "0071fd");
-            } catch (Exception ignored){}
-
-            //TODO scanner settings need to be reported
-//            if (activeGamemode == null) {
-//                MQTTHandler.publish(device, "data", "");
-//            } else {
-//                DeviceHandler.getByName(device, DeviceBase::sendModulesToMQTT);
-//            }
+            DeviceHandler.getByName(device, dev -> {
+                if (activeGamemode == null) {
+                    MQTTHandler.publish(device, "data", "");
+                } else {
+                    dev.sendModulesToMQTT();
+                    dev.applyData();
+                }
+            });
         });
 
         MQTTHandler.subscribe("scannedTag", (device, payload) -> {
@@ -67,5 +59,11 @@ public class GamemodesHandler {
         StatsHandler.newStats(gamemodeName);
         gamemode.startWrapper(configuration);
         activeGamemode = gamemode;
+    }
+
+    public static void stop() {
+        if (activeGamemode == null) return;
+
+        activeGamemode.stopWrapper();
     }
 }

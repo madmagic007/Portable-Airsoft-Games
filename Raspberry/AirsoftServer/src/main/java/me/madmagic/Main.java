@@ -11,6 +11,7 @@ import java.io.FileInputStream;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Scanner;
 
 public class Main {
 
@@ -56,6 +57,20 @@ public class Main {
         StatsHandler.init(users);
 
         GamemodesHandler.startGamemode(gamemode);
+
+        Scanner inScanner = new Scanner(System.in);
+        new Thread(() -> {
+            while (true) {
+                String line = inScanner.nextLine();
+                if (!line.equals("stop")) continue;
+
+                inScanner.close();
+                GamemodesHandler.stop();
+                MQTTHandler.stop();
+
+                System.exit(0);
+            }
+        }).start();
     }
 
     public static String getRelativePath(String relative) throws URISyntaxException {

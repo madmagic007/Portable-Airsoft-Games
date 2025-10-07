@@ -53,9 +53,25 @@ public class DeviceBase {
         MQTTMessage.GENERIC_COLOR.publishIfInData(deviceName, data);
     }
 
+    public void idle() {
+        data.clear();
+        setScannerSettings(-1);
+        setDriverColor(0, 0, 0);
+        setGenericColor(0, 0, 0);
+        buzz(0);
+    }
+
+    public void setScannerSettings(float scanDuration) {
+        MQTTMessage.SCANNER_SETTINGS.publish(deviceName, scanDuration);
+    }
+
     public void setScannerSettings(float scanDuration, float buzzDuration, float buzzPause) {
         String msg = String.format("%f|%f|%f", scanDuration, buzzDuration, buzzPause);
         MQTTMessage.SCANNER_SETTINGS.publish(deviceName, msg);
+    }
+
+    public void buzz(int durationSeconds) {
+        MQTTMessage.BUZZ.publish(deviceName, durationSeconds);
     }
 
     public void setDriverColor(int r, int g, int b) {
@@ -63,13 +79,8 @@ public class DeviceBase {
         MQTTMessage.DRIVER_COLOR.publish(deviceName, hex);
     }
 
-    public void buzz(int durationSeconds) {
-        MQTTMessage.BUZZ.publish(deviceName, durationSeconds);
-    }
-
-    public void setDriverColorAndBuzz(int r, int g, int b, int durationSeconds) {
-        setDriverColor(r, g, b);
-        buzz(durationSeconds);
+    public void setDriverColorFromData(String key) {
+        MQTTMessage.DRIVER_COLOR.publish(deviceName, data.optString(key, "000000"));
     }
 
     public void setGenericColor(int r, int g, int b) {

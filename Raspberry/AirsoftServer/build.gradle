@@ -12,7 +12,14 @@ dependencies {
     implementation "org.json:json:20250517"
 }
 
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_24
+    targetCompatibility = JavaVersion.VERSION_24
+}
+
 jar {
+
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     manifest {
         attributes 'Main-Class': 'me.madmagic.Main'

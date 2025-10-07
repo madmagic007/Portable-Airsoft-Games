@@ -1,9 +1,6 @@
 package me.madmagic.mqtt;
 
-import org.eclipse.paho.client.mqttv3.IMqttClient;
-import org.eclipse.paho.client.mqttv3.MqttClient;
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.*;
 import org.json.JSONObject;
 
 import java.util.function.BiConsumer;
@@ -18,6 +15,15 @@ public class MQTTHandler {
         MqttConnectOptions options = new MqttConnectOptions();
         options.setAutomaticReconnect(true);
         mqtt.connect(options);
+    }
+
+    public static void stop() {
+        try {
+            mqtt.disconnect();
+            mqtt.close();
+        } catch (MqttException e) {
+            System.out.println("Failed to stop mqtt: " + e.getMessage());
+        }
     }
 
     public static void subscribe(String endpoint, BiConsumer<String, JSONObject> consumer) {

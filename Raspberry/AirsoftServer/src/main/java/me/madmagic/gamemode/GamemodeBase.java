@@ -35,6 +35,14 @@ public abstract class GamemodeBase {
         start(configuration);
     }
 
+    public void stopWrapper() {
+        for (DeviceBase device : devices.values()) {
+            device.idle();
+        }
+
+        stop();
+    }
+
     public abstract void start(JSONObject configuration);
     public abstract void stop();
     public abstract void onTagScanned(DeviceBase device, String value);
