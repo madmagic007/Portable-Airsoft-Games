@@ -40,17 +40,13 @@ public class MQTTHandler {
 
         try {
             mqtt.publish("airsoft/" + device + "/set", msg);
-            Thread.sleep(200);
+            System.out.println(post.toString(4));
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.printf("Unable to send mqtt message: " + e.getMessage());
         }
     }
 
-    public static void publish(String device, String topic, String value) {
-        publish(device, new JSONObject().put(topic, value));
-    }
-
-    public static void publish(String device, String topic, Object value) {
-        publish(device, topic, value.toString());
+    public static void publish(MQTTScheduler.MQTTMessageTask task) {
+        publish(task.device(), new JSONObject().put(task.topic(), task.message()));
     }
 }

@@ -3,8 +3,8 @@ package me.madmagic.gamemode;
 import me.madmagic.StatsHandler;
 import me.madmagic.device.DeviceHandler;
 import me.madmagic.gamemode.gamemodes.Domination;
-import me.madmagic.gamemode.gamemodes.Medics;
 import me.madmagic.mqtt.MQTTHandler;
+import me.madmagic.mqtt.MQTTMessage;
 import org.json.JSONObject;
 
 import java.util.HashMap;
@@ -12,8 +12,8 @@ import java.util.Map;
 
 public class GamemodesHandler {
     public static final Map<String, GamemodeBase> gamemodes = new HashMap<>() {{
+        put("base", new GamemodeBase());
         put("domination", new Domination());
-        put("medics", new Medics());
     }};
     public static GamemodeBase activeGamemode;
 
@@ -23,7 +23,7 @@ public class GamemodesHandler {
 
             DeviceHandler.getByName(device, dev -> {
                 if (activeGamemode == null) {
-                    MQTTHandler.publish(device, "data", "");
+                    MQTTMessage.DATA.schedule(device, "");
                 } else {
                     dev.sendModulesToMQTT();
                     dev.applyData();
@@ -37,7 +37,7 @@ public class GamemodesHandler {
             String value = payload.optString("value", "");
             if (value.isBlank()) return;
 
-            activeGamemode.checkReceivedData(device, value);
+            activeGamemode.onTagScannedWrapper(device, value);
         });
     }
 
@@ -57,13 +57,13 @@ public class GamemodesHandler {
 
         System.out.println("Starting gamemode:\n" + configuration.toString(4));
         StatsHandler.newStats(gamemodeName);
-        gamemode.startWrapper(configuration);
+        gamemode.start(configuration);
         activeGamemode = gamemode;
     }
 
     public static void stop() {
         if (activeGamemode == null) return;
 
-        activeGamemode.stopWrapper();
+        activeGamemode.stop();
     }
 }

@@ -33,8 +33,8 @@ public class Main {
         JSONObject gamemode;
         try (FileInputStream fis = new FileInputStream(gamemodeFile)) {
             gamemode = new JSONObject(new org.json.JSONTokener(fis));
-        } catch (JSONException ignored) {
-            System.out.println("Failed to read gamemode json");
+        } catch (JSONException e) {
+            System.out.println("Failed to read gamemode json: " + e.getMessage());
             return;
         }
 

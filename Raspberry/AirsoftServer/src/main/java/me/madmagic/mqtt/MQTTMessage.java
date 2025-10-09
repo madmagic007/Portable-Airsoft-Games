@@ -6,7 +6,8 @@ public enum MQTTMessage {
     SCANNER_SETTINGS("scannerSettings"),
     DRIVER_COLOR("setDriverColor"),
     BUZZ("buzz"),
-    GENERIC_COLOR("setGenericColor");
+    GENERIC_COLOR("setGenericColor"),
+    DATA("data");
 
     private final String topic;
 
@@ -14,11 +15,11 @@ public enum MQTTMessage {
         this.topic = topic;
     }
 
-    public void publish(String deviceName, Object value) {
-        MQTTHandler.publish(deviceName, topic, value);
+    public void schedule(String deviceName, Object value) {
+        MQTTScheduler.schedule(deviceName, topic, value.toString());
     }
 
-    public void publishIfInData(String deviceName, JSONObject data) {
-        if (data.has(topic)) publish(deviceName, data.get(topic));
+    public void scheduleIfInData(String deviceName, JSONObject data) {
+        if (data.has(topic)) schedule(deviceName, data.get(topic));
     }
 }
