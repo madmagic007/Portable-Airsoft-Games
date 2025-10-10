@@ -37,6 +37,7 @@ public class GamemodeBase {
             JSONObject deviceData = devices.getJSONObject(deviceName);
 
             DeviceBase device = DeviceHandler.getOrCreateByName(deviceName);
+            device.data.clear();
             device.setModules(modules);
             device.mergeData(sharedData);
             device.mergeData(deviceData);

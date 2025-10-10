@@ -3,6 +3,7 @@ package me.madmagic;
 import me.madmagic.device.DeviceHandler;
 import me.madmagic.gamemode.GamemodesHandler;
 import me.madmagic.mqtt.MQTTHandler;
+import me.madmagic.mqtt.MQTTScheduler;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -58,6 +59,9 @@ public class Main {
 
         GamemodesHandler.startGamemode(gamemode);
 
+        System.out.println("Program running...");
+        System.out.println("Type \"stop\" to exit program safely");
+
         Scanner inScanner = new Scanner(System.in);
         new Thread(() -> {
             while (true) {
@@ -66,9 +70,8 @@ public class Main {
 
                 inScanner.close();
                 GamemodesHandler.stop();
-                MQTTHandler.stop();
-
-                System.exit(0);
+                MQTTScheduler.stop(); // this calls MQTTHandler.stop and System.exit when the message queue is empty
+                break;
             }
         }).start();
     }
