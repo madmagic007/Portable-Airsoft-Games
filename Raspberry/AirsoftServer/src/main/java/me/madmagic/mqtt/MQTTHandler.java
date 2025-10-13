@@ -42,7 +42,10 @@ public class MQTTHandler {
             mqtt.publish("airsoft/" + device + "/set", msg);
             //System.out.println(post.toString(4));
         } catch (Exception e) {
-            System.out.printf("Unable to send mqtt message: " + e.getMessage());
+            System.out.println("Unable to send mqtt message: " + e.getMessage());
+            System.out.println(post.toString(4));
+            System.out.println(device);
+            System.out.println();
         }
     }
 

@@ -47,6 +47,15 @@ public class StatsHandler {
         write();
     }
 
+    public static void addNumericStat(String tag, String key, int amount) {
+        JSONObject tagStats = stats.optJSONObject(tag, new JSONObject());
+        int curValue = tagStats.optInt(key, 0);
+        tagStats.put(key, curValue + amount);
+        stats.put(tag, tagStats);
+
+        write();
+    }
+
     public static int getNumericStat(String tag, String key) {
         JSONObject tagStats = stats.optJSONObject(tag, new JSONObject());
         return tagStats.optInt(key, 0);

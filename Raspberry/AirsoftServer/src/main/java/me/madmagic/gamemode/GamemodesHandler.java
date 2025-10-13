@@ -11,11 +11,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class GamemodesHandler {
-    public static final Map<String, GamemodeBase> gamemodes = new HashMap<>() {{
+
+    private static Map<String, Long> scanTimes = new HashMap<>();
+    private static int minScansDelaySeconds = 5;
+
+    private static final Map<String, GamemodeBase> gamemodes = new HashMap<>() {{
         put("base", new GamemodeBase());
         put("domination", new Domination());
     }};
-    public static GamemodeBase activeGamemode;
+    private static GamemodeBase activeGamemode;
 
     public static void init() {
         MQTTHandler.subscribe("airsoftPoint", (device, payload) -> {
@@ -32,11 +36,19 @@ public class GamemodesHandler {
         });
 
         MQTTHandler.subscribe("scannedTag", (device, payload) -> {
+            System.out.println("received handler");
             if (activeGamemode == null) return;
 
             String value = payload.optString("value", "");
             if (value.isBlank()) return;
 
+            String deviceKey = device + payload;
+            long curTime = System.currentTimeMillis();
+            long lastScanTime = scanTimes.getOrDefault(deviceKey, 0L);
+
+            if (curTime - lastScanTime <= minScansDelaySeconds * 1000L) return;
+
+            scanTimes.put(deviceKey, curTime);
             activeGamemode.onTagScannedWrapper(device, value);
         });
     }

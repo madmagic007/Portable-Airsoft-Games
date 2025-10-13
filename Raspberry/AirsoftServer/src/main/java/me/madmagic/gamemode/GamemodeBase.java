@@ -28,6 +28,9 @@ public class GamemodeBase {
 
     protected void parseDevices(String keyName, DeviceCollection collection, int... modules) {
         JSONObject allDevices = configuration.getJSONObject("devices");
+        JSONObject allDeviceData = allDevices.optJSONObject("data", new JSONObject());
+
+        if (!allDevices.has(keyName)) return;
 
         JSONObject devicesObject = allDevices.getJSONObject(keyName);
         JSONObject devices = devicesObject.getJSONObject("devices");
@@ -37,8 +40,9 @@ public class GamemodeBase {
             JSONObject deviceData = devices.getJSONObject(deviceName);
 
             DeviceBase device = DeviceHandler.getOrCreateByName(deviceName);
-            device.data.clear();
             device.setModules(modules);
+            device.data.clear();
+            device.mergeData(allDeviceData);
             device.mergeData(sharedData);
             device.mergeData(deviceData);
 
@@ -78,8 +82,6 @@ public class GamemodeBase {
             onSpawnTagScanned(device, tag);
         } else if (medics.containsDevice(device)){
             onMedicTagScanned(device, tag);
-        } else {
-            onTagScanned(device, tag);
         }
     }
 
