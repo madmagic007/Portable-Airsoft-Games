@@ -1,5 +1,7 @@
 #include "ZigbeeController.h"
 
+static CustomCluster _cluster(2, "airsoftPoint", "data");
+
 void ZigbeeController::setup() {
     pinMode(BOOT_PIN, INPUT_PULLUP);
 
@@ -8,7 +10,7 @@ void ZigbeeController::setup() {
     extender.setPowerSource(ZB_POWER_SOURCE_MAINS);
     Zigbee.addEndpoint(&extender);
 
-    Zigbee.addEndpoint(&_extender);
+    Zigbee.addEndpoint(&_cluster);
 
     Zigbee.setTimeout(INT32_MAX);
     if (!Zigbee.begin(ZIGBEE_ROUTER)) {
@@ -30,7 +32,7 @@ void ZigbeeController::setup() {
 
 void ZigbeeController::checkTask(void* _) {
     while (!_confirmed) {
-        _clusters[0].reportAttribs();
+        _cluster.reportAttribs();
         delay(1000);
     }
 

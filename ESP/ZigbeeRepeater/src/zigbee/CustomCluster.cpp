@@ -11,8 +11,8 @@ CustomCluster::CustomCluster(uint8_t endpoint, const String& senderTopic, const 
     esp_zb_cluster_list_add_basic_cluster(_cluster_list, esp_zb_basic_cluster_create(NULL), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
     esp_zb_cluster_list_add_identify_cluster(_cluster_list, esp_zb_identify_cluster_create(NULL), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
 
-    defineCluster(SENDER_CLUSTER_ID, topic);
-    defineCluster(RECEIVER_CLUSTER_ID, key);
+    defineCluster(SENDER_CLUSTER_ID, senderTopic);
+    defineCluster(RECEIVER_CLUSTER_ID, receiverKey);
 }
 
 void CustomCluster::defineCluster(uint16_t clusterID, const String& topicKey) {
@@ -31,14 +31,11 @@ void CustomCluster::defineCluster(uint16_t clusterID, const String& topicKey) {
 }
 
 void CustomCluster::reportAttribs() {
-    if (_senderDefined) {
-        reportAttr(SENDER_CLUSTER_ID, TOPIC_ATTRIBUTE_ID);
-        delay(100);
-    }
-    if (_receiverDefined) {
-        reportAttr(RECEIVER_CLUSTER_ID, TOPIC_ATTRIBUTE_ID);
-        delay(100);
-    }
+    reportAttr(SENDER_CLUSTER_ID, TOPIC_ATTRIBUTE_ID);
+    delay(100);
+    
+    reportAttr(RECEIVER_CLUSTER_ID, TOPIC_ATTRIBUTE_ID);
+    delay(100);    
 }
 
 boolean CustomCluster::reportAttr(uint16_t clusterID, uint16_t attrID) {
