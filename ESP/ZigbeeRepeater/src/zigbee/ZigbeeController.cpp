@@ -19,8 +19,10 @@ void ZigbeeController::setup() {
         ESP.restart();
     }
     rgbLedWrite(BOARD_LED, 10, 1, 0);
-
-    while (!Zigbee.connected()) delay(100);
+    
+    while (!Zigbee.connected()) {
+        delay(100);
+    }
 
     rgbLedWrite(BOARD_LED, 0, 0, 1);
 

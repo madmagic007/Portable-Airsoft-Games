@@ -3,6 +3,7 @@ package me.madmagic.gamemode;
 import me.madmagic.StatsHandler;
 import me.madmagic.device.DeviceHandler;
 import me.madmagic.gamemode.gamemodes.Domination;
+import me.madmagic.gamemode.gamemodes.SS;
 import me.madmagic.mqtt.MQTTHandler;
 import me.madmagic.mqtt.MQTTMessage;
 import org.json.JSONObject;
@@ -18,6 +19,7 @@ public class GamemodesHandler {
     private static final Map<String, GamemodeBase> gamemodes = new HashMap<>() {{
         put("base", new GamemodeBase());
         put("domination", new Domination());
+        put("ss", new SS());
     }};
     private static GamemodeBase activeGamemode;
 

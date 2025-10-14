@@ -1,5 +1,6 @@
 package me.madmagic;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -8,6 +9,8 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class StatsHandler {
 
@@ -26,7 +29,7 @@ public class StatsHandler {
         LocalDateTime now = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy_HH:mm");
 
-        statsFile = new File(statsDir, String.format("%s_%s.json", gamemodeName, now.format(formatter)));
+        statsFile = new File(statsDir, java.lang.String.format("%s_%s.json", gamemodeName, now.format(formatter)));
 
         try {
             statsFile.createNewFile();
@@ -38,35 +41,47 @@ public class StatsHandler {
         stats = new JSONObject();
     }
 
-    public static void incNumericStat(String tag, String key) {
-        JSONObject tagStats = stats.optJSONObject(tag, new JSONObject());
-        int curValue = tagStats.optInt(key, 0);
-        tagStats.put(key, curValue + 1);
-        stats.put(tag, tagStats);
-
+    public static void getAndSaveTopLevelObject(String key, Consumer<JSONObject> consumer) {
+        JSONObject o = stats.optJSONObject(key, new JSONObject());
+        consumer.accept(o);
+        stats.put(key, o);
         write();
+
     }
 
-    public static void addNumericStat(String tag, String key, int amount) {
-        JSONObject tagStats = stats.optJSONObject(tag, new JSONObject());
-        int curValue = tagStats.optInt(key, 0);
-        tagStats.put(key, curValue + amount);
-        stats.put(tag, tagStats);
+    public static <T> void optSave(JSONObject parent, String key, T defaultValue, Function<T, T> action) {
+        Object curValue = parent.opt(key);
+        curValue = curValue == null ? defaultValue : curValue;
 
-        write();
+        Object modified = action.apply((T) curValue);
+        parent.put(key, modified);
     }
 
-    public static int getNumericStat(String tag, String key) {
-        JSONObject tagStats = stats.optJSONObject(tag, new JSONObject());
-        return tagStats.optInt(key, 0);
+    public static void incNumericStat(String key, String stat) {
+        getAndSaveTopLevelObject(key, o -> {
+            int curValue = o.optInt(stat, 0);
+            o.put(stat, curValue + 1);
+        });
     }
 
-    public static String getName(String tag) {
-        JSONObject user = users.optJSONObject(tag, new JSONObject());
-        return user.optString("name", "");
+    public static void addNumericStat(String key, String stat, int amount) {
+        getAndSaveTopLevelObject(key, o -> {
+            int curValue = o.optInt(stat, 0);
+            o.put(stat, curValue + amount);
+        });
     }
 
-    public static String getTeam(String tag) {
+    public static void incNumericStat(JSONObject o, String stat) {
+        int curValue = o.optInt(stat, 0);
+        o.put(stat, curValue + 1);
+    }
+
+    public static int getNumericStat(String key, String stat) {
+        JSONObject tagStats = stats.optJSONObject(key, new JSONObject());
+        return tagStats.optInt(stat, 0);
+    }
+
+    public static String getUserTeam(String tag) {
         JSONObject user = users.optJSONObject(tag, new JSONObject());
         return user.optString("team", "");
     }
@@ -87,5 +102,13 @@ public class StatsHandler {
         } catch (Exception e) {
             System.out.println("failed to write to statistics file: " + e.getMessage());
         }
+    }
+
+    public static boolean arrayHas(JSONArray array, Object value) {
+        for (Object o : array) {
+            if (o.equals(value)) return true;
+        }
+
+        return false;
     }
 }

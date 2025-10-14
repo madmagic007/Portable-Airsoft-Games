@@ -27,7 +27,7 @@ public class Domination extends GamemodeBase {
     @Override
     public void onTagScanned(DeviceBase device, String tag) {
         super.onTagScanned(device, tag);
-        String userTeam = StatsHandler.getTeam(tag);
+        String userTeam = StatsHandler.getUserTeam(tag);
         String capturePointTeam = device.data.optString("capturedBy", "");
 
         System.out.println(userTeam);

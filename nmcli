@@ -1,0 +1,7 @@
+sudo nmcli connection add type wifi ifname wlan0 con-name PortableAirsoftGamesHotspot autoconnect yes ssid PortableAirsoftGames
+sudo nmcli connection modify PortableAirsoftGamesHotspot 802-11-wireless.mode ap 802-11-wireless.band bg ipv4.method shared
+sudo nmcli connection modify PortableAirsoftGamesHotspot wifi-sec.key-mgmt wpa-psk wifi-sec.psk "PortableAirsoftGames"
+sudo nmcli connection modify PortableAirsoftGamesHotspot connection.autoconnect-priority -10
+sudo nmcli connection modify PortableAirsoftGamesHotspot connection.autoconnect-retries 0
+sudo nmcli connection modify PortableAirsoftGamesHotspot connection.wait-device-timeout 20
+

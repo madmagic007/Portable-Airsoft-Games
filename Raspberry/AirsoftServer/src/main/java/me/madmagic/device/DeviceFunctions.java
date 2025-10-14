@@ -5,7 +5,7 @@ import me.madmagic.StatsHandler;
 public class DeviceFunctions {
 
     public static void tryRespawn(DeviceBase device, String tag, String statName) {
-        String userTeam = StatsHandler.getTeam(tag);
+        String userTeam = StatsHandler.getUserTeam(tag);
 
         if (!userTeam.equals(device.data.getString("team"))) {
             device.genericColorFromData("failBlink");
