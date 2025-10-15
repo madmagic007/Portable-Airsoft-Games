@@ -15,7 +15,7 @@ import java.util.function.Function;
 public class StatsHandler {
 
     private static JSONObject users;
-    private static JSONObject stats;
+    public static JSONObject stats;
     private static File statsDir;
     private static File statsFile;
 
@@ -86,7 +86,7 @@ public class StatsHandler {
         return user.optString("team", "");
     }
 
-    private static void write() {
+    public static void write() {
         JSONObject prettyStats = new JSONObject();
 
         stats.keySet().forEach(key -> {

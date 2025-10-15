@@ -30,38 +30,40 @@ public class SS extends GamemodeBase {
         if (!points.containsDevice(device)) return;
 
         String deviceName = device.deviceName;
-
-        StatsHandler.getAndSaveTopLevelObject(tag, user -> {
-            JSONArray userScanned = user.optJSONArray("scannedDevices", new JSONArray());
-
-            if (StatsHandler.arrayHas(userScanned, deviceName)) {
-                device.genericColorFromData("blinkFail");
-                StatsHandler.incNumericStat(user, "doubleScanned");
-                return;
-            }
-
-            userScanned.put(deviceName);
-            user.put("scannedDevices", userScanned);
-
-            StatsHandler.incNumericStat(user, "devicesScanned");
-            device.genericColorFromData("blink");
-        });
-
         String userTeam = StatsHandler.getUserTeam(tag);
-        StatsHandler.getAndSaveTopLevelObject(userTeam, team -> {
-            JSONArray teamScanned = team.optJSONArray("scannedDevices", new JSONArray());
 
-            if (StatsHandler.arrayHas(teamScanned, deviceName)) {
-                StatsHandler.incNumericStat(team, "totalDoubleScanned");
-                return;
-            }
+        JSONObject user = StatsHandler.stats.optJSONObject(tag, new JSONObject());
+        JSONObject team = StatsHandler.stats.optJSONObject(userTeam, new JSONObject());
 
-            teamScanned.put(deviceName);
-            team.put("scannedDevices", teamScanned);
+        JSONArray userScanned = user.optJSONArray("scannedDevices", new JSONArray());
+        JSONArray teamScanned = team.optJSONArray("scannedDevices", new JSONArray());
 
+        // user double scanned a point
+        if (StatsHandler.arrayHas(userScanned, deviceName)) {
+            device.genericColorFromData("blinkFail");
+
+            StatsHandler.incNumericStat(user, "doubleScanned");
+            StatsHandler.incNumericStat(team, "totalDoubleScanned");
+        } else {
+            device.genericColorFromData("blink");
+
+            //put devices in user and team array
+            userScanned.put(deviceName);
+            if (!StatsHandler.arrayHas(teamScanned, deviceName)) teamScanned.put(deviceName);
+
+
+            // inc user / team / device totalScanned
+            StatsHandler.incNumericStat(user, "devicesScanned");
             StatsHandler.incNumericStat(team, "totalScanned");
-        });
+            StatsHandler.incNumericStat(deviceName, "timesScanned");
+        }
 
-        StatsHandler.incNumericStat(deviceName, "timesScanned");
+        //save all stats
+        user.put("scannedDevices", userScanned);
+        team.put("scannedDevices", teamScanned);
+        StatsHandler.stats.put(tag, user);
+        StatsHandler.stats.put(userTeam, team);
+
+        StatsHandler.write();
     }
 }

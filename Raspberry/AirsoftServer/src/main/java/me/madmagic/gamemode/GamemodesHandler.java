@@ -25,7 +25,7 @@ public class GamemodesHandler {
 
     public static void init() {
         MQTTHandler.subscribe("airsoftPoint", (device, payload) -> {
-            System.out.println("Device reported itself: " + device);
+            //System.out.println("Device reported itself: " + device);
 
             DeviceHandler.getByName(device, dev -> {
                 if (activeGamemode == null) {
