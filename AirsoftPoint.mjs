@@ -9,14 +9,15 @@ const fromZB = {
 	cluster: "toMQTT",
 	type: ["attributeReport", "topic"],
 	convert: (model, msg, publish, options, meta) => {
-		const clusters = msg.endpoint.clusters;
-		const clusterName = msg.cluster;
-		const attributes = clusters[clusterName].attributes;
-		const topic = attributes.topic;
+		const rawValue = msg.data.value;
+		const split = rawValue.split("|");
+		const topic = split[0];
+		const value = split[1];
+
 	
 		const payload = { 
 			"device": options.friendly_name,
-			"value": attributes.value
+			"value": value
 		};
 		
 		globalThis.controller.mqtt.publish(topic, JSON.stringify(payload), {});
@@ -42,13 +43,12 @@ export default {
     vendor: "MadMagic",
     description: "Airsoft Game Point",
     fromZigbee: [fromZB],
-    toZigbee: [toZB],
+    toZigbee: [],
     extend: [
     	deviceAddCustomCluster("toMQTT", {
 		ID: 0xff00,
 		attributes: {
-			value: {ID: 0x0000, type: Zcl.DataType.CHAR_STR},
-			topic: {ID: 0x0001, type: Zcl.DataType.CHAR_STR},
+			value: {ID: 0x0000, type: Zcl.DataType.CHAR_STR}
 		},
 		commands: {},
 		commandsResponse: {},
@@ -56,8 +56,7 @@ export default {
     	deviceAddCustomCluster("fromMQTT", {
 		ID: 0xff01,
 		attributes: {
-			value: {ID: 0x0000, type: Zcl.DataType.CHAR_STR},
-			topic: {ID: 0x0001, type: Zcl.DataType.CHAR_STR},
+			value: {ID: 0x0000, type: Zcl.DataType.CHAR_STR}
 		},
 		commands: {},
 		commandsResponse: {},
@@ -65,4 +64,3 @@ export default {
     ],
     meta: {},
 };
-

@@ -1,8 +1,6 @@
 #include "ZigbeeController.h"
 
-void ZigbeeController::setup(CustomCluster* clusters, size_t size) {
-    _clusters = clusters;
-
+void ZigbeeController::setup(ModuleBase2* modules[], size_t size) {
     pinMode(BOOT_PIN, INPUT_PULLUP);
 
     ZigbeeRangeExtender extender(1);
@@ -11,7 +9,7 @@ void ZigbeeController::setup(CustomCluster* clusters, size_t size) {
     Zigbee.addEndpoint(&extender);
 
     for (size_t i = 0; i < size; i++) {
-        Zigbee.addEndpoint(&clusters[i]);
+        Zigbee.addEndpoint(modules[i]);
     }
 
     Zigbee.setTimeout(INT32_MAX);
@@ -20,32 +18,12 @@ void ZigbeeController::setup(CustomCluster* clusters, size_t size) {
         Serial.println("Rebooting...");
         ESP.restart();
     }
-    rgbLedWrite(BOARD_LED, 10, 1, 0);
+    rgbLedWrite(RGB_BUILTIN, 10, 1, 0);
 
     while (!Zigbee.connected()) vTaskDelay(pdMS_TO_TICKS(100));
 
-    rgbLedWrite(BOARD_LED, 0, 0, 1);
-
-    // xTaskCreate(
-    //     checkTask, "zigbeeCheckTask", 2048,
-    //     NULL, 1, NULL
-    // );
-}
-
-void ZigbeeController::checkTask(void* _) {
-    while (!_confirmed) {
-        _clusters[0].reportAttribs();
-        vTaskDelay(pdMS_TO_TICKS(1000));
-    }
-
-    vTaskDelete(NULL);
-}
-
-void ZigbeeController::confirmed() {
-    if (_confirmed) return;
-    _confirmed = true;
-
-    rgbLedWrite(RGB_BUILTIN, 0, 1, 0);
+    rgbLedWrite(RGB_BUILTIN, 0, 0, 1);
+    modules[0]->doSetup();
 }
 
 void ZigbeeController::loop() {
