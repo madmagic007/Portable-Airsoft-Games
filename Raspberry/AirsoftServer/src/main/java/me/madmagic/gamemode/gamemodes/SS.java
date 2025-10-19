@@ -17,7 +17,6 @@ public class SS extends GamemodeBase {
     @Override
     public void start(JSONObject configuration) {
         super.start(configuration);
-        points.clear();
 
         parseDevices("points", points, DeviceModule.GENERIC);
 
@@ -65,5 +64,12 @@ public class SS extends GamemodeBase {
         StatsHandler.stats.put(userTeam, team);
 
         StatsHandler.write();
+    }
+
+    @Override
+    public void stop() {
+        super.stop();
+
+        points.clear();
     }
 }

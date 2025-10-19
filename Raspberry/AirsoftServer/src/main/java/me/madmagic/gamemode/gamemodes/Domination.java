@@ -15,8 +15,6 @@ public class Domination extends GamemodeBase {
     @Override
     public void start(JSONObject configuration) {
         super.start(configuration);
-        hardPoints.clear();
-        softPoints.clear();
 
         parseDevices("hardPoints", hardPoints, DeviceModule.CAPTURE_POINT);
         parseDevices("softPoints", softPoints, DeviceModule.GENERIC);
@@ -29,9 +27,6 @@ public class Domination extends GamemodeBase {
         super.onTagScanned(device, tag);
         String userTeam = StatsHandler.getUserTeam(tag);
         String capturePointTeam = device.data.optString("capturedBy", "");
-
-        System.out.println(userTeam);
-        System.out.println(capturePointTeam);
 
         if (capturePointTeam.equals(userTeam)) return;
 
@@ -78,5 +73,8 @@ public class Domination extends GamemodeBase {
         });
 
         super.stop();
+
+        hardPoints.clear();
+        softPoints.clear();
     }
 }

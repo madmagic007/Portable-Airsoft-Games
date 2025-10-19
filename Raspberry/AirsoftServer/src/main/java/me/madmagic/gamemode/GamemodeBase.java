@@ -4,6 +4,7 @@ import me.madmagic.device.*;
 import org.json.JSONObject;
 
 import java.util.Collection;
+import java.util.Scanner;
 
 public class GamemodeBase {
 
@@ -15,8 +16,6 @@ public class GamemodeBase {
 
     @SafeVarargs
     protected final void registerDevices(Collection<DeviceBase>... withDevices) {
-        devices.clear();
-
         for (Collection<DeviceBase> collection : withDevices) {
             for (DeviceBase device : collection) {
                 devices.put(device.deviceName, device);
@@ -62,9 +61,6 @@ public class GamemodeBase {
     public void start(JSONObject configuration) {
         this.configuration = configuration;
 
-        spawns.clear();
-        medics.clear();
-
         parseDevices("spawns", spawns, DeviceModule.GENERIC);
         parseDevices("medics", medics, DeviceModule.GENERIC);
 
@@ -75,6 +71,10 @@ public class GamemodeBase {
         for (DeviceBase device : devices.values()) {
             device.idle();
         }
+
+        devices.clear();
+        medics.clear();
+        spawns.clear();
     }
 
     protected void onTagScanned(DeviceBase device, String tag) {
@@ -88,7 +88,12 @@ public class GamemodeBase {
     protected void onSpawnTagScanned(DeviceBase device, String tag) {
         DeviceFunctions.tryRespawn(device, tag, "spawnRespawns");
     }
+
     protected void onMedicTagScanned(DeviceBase device, String tag) {
         DeviceFunctions.tryRespawn(device, tag, "medicRespawns");
+    }
+
+    protected boolean onConsoleInput(String input, Scanner inScanner) {
+        return false;
     }
 }

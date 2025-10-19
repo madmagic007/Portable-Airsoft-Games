@@ -83,11 +83,6 @@ void setup() {
     }
     
     zigbee.setup(clusters, clusterSize);
-
-    uint8_t data[] = {'0'};
-
-    scanner.doSetup();
-    scanner.receiveData(data, 1);
 }
 
 void loop() {

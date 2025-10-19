@@ -26,10 +26,10 @@ void ZigbeeController::setup(CustomCluster* clusters, size_t size) {
 
     rgbLedWrite(BOARD_LED, 0, 0, 1);
 
-    // xTaskCreate(
-    //     checkTask, "zigbeeCheckTask", 2048,
-    //     NULL, 1, NULL
-    // );
+    xTaskCreate(
+        checkTask, "zigbeeCheckTask", 2048,
+        NULL, 1, NULL
+    );
 }
 
 void ZigbeeController::checkTask(void* _) {

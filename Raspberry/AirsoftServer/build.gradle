@@ -12,32 +12,47 @@ dependencies {
     implementation "org.json:json:20250517"
 }
 
-
 java {
     sourceCompatibility = JavaVersion.VERSION_24
     targetCompatibility = JavaVersion.VERSION_24
 }
 
 jar {
-
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
     manifest {
         attributes 'Main-Class': 'me.madmagic.Main'
     }
+
+    // Bundle all runtime dependencies into the fat JAR
     from {
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     } {
         exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
     }
 
-    setDestinationDirectory(file(project.rootDir))
+    // Output to project root for convenience
+    destinationDirectory = project.rootDir
+
+    // Also copy to $HOME/Airsoft after build
+    doLast {
+        def airsoftDir = new File(System.getProperty("user.home"), "Airsoft")
+        if (!airsoftDir.exists()) {
+            airsoftDir.mkdirs()
+        }
+        copy {
+            from archiveFile
+            into airsoftDir
+        }
+        println "✅ Copied JAR to ${airsoftDir.absolutePath}"
+    }
 }
 
 remotes {
     airsoftpi {
-        host = 'airsoftpi.local'   // will match your ~/.ssh/config entry
-        user = 'pi'    // technically redundant if ssh config sets User
-        identity = file(System.getProperty("user.home") + "/.ssh/id_ed25519")
+        host = 'airsoftpi.local'   // hostname or SSH config alias
+        user = 'pi'
+        identity = file("${System.getProperty("user.home")}/.ssh/id_ed25519")
     }
 }
 
@@ -51,5 +66,6 @@ tasks.register('FTPUpload') {
                 put from: jarFile, into: '/home/pi/'
             }
         }
+        println "🚀 Uploaded ${jarFile.name} to airsoftpi:/home/pi/"
     }
 }

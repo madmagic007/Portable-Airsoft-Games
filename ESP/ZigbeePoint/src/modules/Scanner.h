@@ -130,15 +130,16 @@ private:
         while (true) {
             if (_command == REPORT) {
                 _command = NONE;
-                reportValue(_lastUID);
+
+                digitalWrite(_buzzer, LOW); // buzzer low before report, otherwise zigbee buzz command stops too soon
                 Serial.println("reporting value");
+                reportValue(_lastUID);
 
                 if (_delaySec == 0) vTaskDelay(pdMS_TO_TICKS(200)); // visible blink
 
                 digitalWrite(_r, LOW);
                 digitalWrite(_g, LOW);
                 digitalWrite(_b, HIGH);
-                digitalWrite(_buzzer, LOW);
             } else if (_command == FAIL) {
                 _command = NONE;
 
@@ -159,6 +160,7 @@ private:
 
                 if (_buzzState) {
                     if (now - _lastBuzz >= _buzzDuration * 1000UL) {
+                        Serial.println("buzz low");
                         digitalWrite(_buzzer, LOW);
                         _buzzState = false;
                         _lastBuzz = now;

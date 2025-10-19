@@ -14,7 +14,7 @@ import java.util.function.Function;
 
 public class StatsHandler {
 
-    private static JSONObject users;
+    public static JSONObject users;
     public static JSONObject stats;
     private static File statsDir;
     private static File statsFile;

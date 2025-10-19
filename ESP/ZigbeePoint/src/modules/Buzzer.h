@@ -18,7 +18,6 @@ public:
         buf[size] = '\0';
         
         _buzzDuration = atof(buf);
-        
         startTask("buzzerTask");
     }
 
