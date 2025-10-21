@@ -1,4 +1,5 @@
 #include "ModuleBase2.h"
+#include "AirsoftPoint.h"
 
 void ModuleBase2::zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) {
     uint8_t* bytes = static_cast<uint8_t*>(message->attribute.data.value);
@@ -9,6 +10,7 @@ void ModuleBase2::zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *mess
         data[i] = bytes[i + 1];
     }
     
+    AirsoftPoint::confirmed();
     if (_setup) receiveData(data, length);
 }
 

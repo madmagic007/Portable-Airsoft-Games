@@ -12,8 +12,7 @@ const fromZB = {
 		const rawValue = msg.data.value;
 		const split = rawValue.split("|");
 		const topic = split[0];
-		const value = split[1];
-
+		const value = split.slice(1).join("|");
 	
 		const payload = { 
 			"device": options.friendly_name,
@@ -27,12 +26,13 @@ const fromZB = {
 const toZB = {
 	key: ["write"],
 	convertSet: async (entity, key, value, meta) => {
+		const split = value.split("|");
+		const id = Number(split[0]);
+		const vValue = split.slice(1).join("|");
+
 		for (const endpoint of meta.device.endpoints) {
-			for (const [vKey, vValue] of Object.entries(value)) {
-				if (endpoint.getClusterAttributeValue("fromMQTT", "topic") == vKey) {
-					await endpoint.write("fromMQTT", {"value": vValue});
-				}
-			}
+			if (endpoint.ID != id) continue;
+			await endpoint.write("fromMQTT", {"value": vValue});
 		}
 	}
 };
@@ -43,7 +43,7 @@ export default {
     vendor: "MadMagic",
     description: "Airsoft Game Point",
     fromZigbee: [fromZB],
-    toZigbee: [],
+    toZigbee: [toZB],
     extend: [
     	deviceAddCustomCluster("toMQTT", {
 		ID: 0xff00,

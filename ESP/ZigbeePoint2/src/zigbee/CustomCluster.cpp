@@ -1,6 +1,6 @@
 #include "CustomCluster.h"
 
-CustomCluster::CustomCluster(uint8_t endpoint, const String& senderTopic, const String& receiverKey) : ZigbeeEP(endpoint), _senderTopic(senderTopic) {
+CustomCluster::CustomCluster(uint8_t endpoint, bool hasSender, bool hasReceiver) : ZigbeeEP(endpoint) {
     _device_id = ESP_ZB_HA_SIMPLE_SENSOR_DEVICE_ID;
     _ep_config = {.endpoint = _endpoint, .app_profile_id = ESP_ZB_AF_HA_PROFILE_ID, .app_device_id = ESP_ZB_HA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0};
     
@@ -11,32 +11,15 @@ CustomCluster::CustomCluster(uint8_t endpoint, const String& senderTopic, const 
     esp_zb_cluster_list_add_basic_cluster(_cluster_list, esp_zb_basic_cluster_create(NULL), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
     esp_zb_cluster_list_add_identify_cluster(_cluster_list, esp_zb_identify_cluster_create(NULL), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
 
-    if (!senderTopic.isEmpty()) addSender(senderTopic);
-    if (!receiverKey.isEmpty()) addReceiver(receiverKey);
+    if (hasSender) defineCluster(SENDER_CLUSTER_ID);
+    if (hasReceiver) defineCluster(RECEIVER_CLUSTER_ID);
 }
 
-void CustomCluster::addSender(const String& topic) {
-    defineCluster(SENDER_CLUSTER_ID, topic);
-    _senderDefined =  true;
-}
-
-void CustomCluster::addReceiver(const String& key) {
-    defineCluster(RECEIVER_CLUSTER_ID, key);
-    _receiverDefined = true;
-}
-
-void CustomCluster::defineCluster(uint16_t clusterID, const String& topicKey) {
+void CustomCluster::defineCluster(uint16_t clusterID) {
     esp_zb_attribute_list_t *cluster = esp_zb_zcl_attr_list_create(clusterID);
-
-    uint8_t len = topicKey.length();
-    uint8_t buffer[len + 1];
-    buffer[0] = len;
-    memcpy(buffer + 1, topicKey.c_str(), len);
-
     uint8_t value[] = { 0 };
 
     esp_zb_custom_cluster_add_custom_attr(cluster, VALUE_ATTRIBUTE_ID, ESP_ZB_ZCL_ATTR_TYPE_CHAR_STRING, ESP_ZB_ZCL_ATTR_ACCESS_READ_WRITE | ESP_ZB_ZCL_ATTR_ACCESS_REPORTING, value);
-    esp_zb_custom_cluster_add_custom_attr(cluster, TOPIC_ATTRIBUTE_ID, ESP_ZB_ZCL_ATTR_TYPE_CHAR_STRING, ESP_ZB_ZCL_ATTR_ACCESS_READ_WRITE | ESP_ZB_ZCL_ATTR_ACCESS_REPORTING, buffer);
     esp_zb_cluster_list_add_custom_cluster(_cluster_list, cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
 }
 
@@ -56,7 +39,7 @@ bool CustomCluster::setValue(uint8_t arr[]) {
 }
 
 bool CustomCluster::sendValue(const String& str) {
-    String combined = _senderTopic + "|" + str;
+    String combined = String(_endpoint) + "|" + str;
     uint8_t len = combined.length();
     uint8_t buffer[len + 1];
     buffer[0] = len;

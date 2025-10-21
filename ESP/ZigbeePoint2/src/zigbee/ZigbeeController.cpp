@@ -3,7 +3,7 @@
 void ZigbeeController::setup(ModuleBase2* modules[], size_t size) {
     pinMode(BOOT_PIN, INPUT_PULLUP);
 
-    ZigbeeRangeExtender extender(1);
+    ZigbeeRangeExtender extender(size + 1);
     extender.setManufacturerAndModel("MadMagic", "AirsoftPoint");
     extender.setPowerSource(ZB_POWER_SOURCE_MAINS);
     Zigbee.addEndpoint(&extender);

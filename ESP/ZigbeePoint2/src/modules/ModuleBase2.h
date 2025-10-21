@@ -9,11 +9,10 @@
 #define RECEIVER_CLUSTER_ID 0xFF01
 
 #define VALUE_ATTRIBUTE_ID 0x0000
-#define TOPIC_ATTRIBUTE_ID 0x0001
 
 class ModuleBase2 : public CustomCluster {
 public:
-    ModuleBase2(const uint8_t* pins, uint8_t endpoint, const String &senderTopic, const String &receiverKey) : CustomCluster(endpoint, senderTopic, receiverKey), _pins(pins) {}
+    ModuleBase2(const uint8_t* pins, uint8_t endpoint, bool hasSender, bool hasReceiver) : CustomCluster(endpoint, hasSender, hasReceiver), _pins(pins) {}
     void setPins(const uint8_t* pins);
     void doSetup();
     void doLoop();
