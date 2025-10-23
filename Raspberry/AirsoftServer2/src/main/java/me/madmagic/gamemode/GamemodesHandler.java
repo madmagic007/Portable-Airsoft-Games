@@ -1,6 +1,7 @@
 package me.madmagic.gamemode;
 
 import me.madmagic.StatsHandler;
+import me.madmagic.device.DeviceBase;
 import me.madmagic.device.DeviceHandler;
 import me.madmagic.gamemode.gamemodes.Domination;
 import me.madmagic.gamemode.gamemodes.Register;
@@ -27,16 +28,18 @@ public class GamemodesHandler {
     private static GamemodeBase activeGamemode;
 
     public static void init() {
-        MQTTHandler.subscribe(MQTTMessage.AIRSOFTPOINT, (device, payload) -> {
-            System.out.println("Device reported itself: " + device);
+        MQTTHandler.subscribe(MQTTMessage.AIRSOFTPOINT, (deviceName, payload) -> {
+            System.out.println("Device reported itself: " + deviceName);
+            DeviceBase device = DeviceHandler.getByName(deviceName);
 
-            DeviceHandler.getByName(device, dev -> {
-                if (activeGamemode == null) {
-                    MQTTMessage.AIRSOFTPOINT.schedule(device, "");
-                } else {
-                    dev.applyData();
-                }
-            });
+            if (device != null) {
+                System.out.println("applying gamemode data");
+                device.applyData();
+                return;
+            }
+
+            System.out.println("acking online");
+            MQTTMessage.AIRSOFTPOINT.schedule(deviceName, "");
         });
 
         MQTTHandler.subscribe(MQTTMessage.SCANNER, (device, payload) -> {

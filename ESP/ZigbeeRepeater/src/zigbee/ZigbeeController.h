@@ -1,18 +1,10 @@
 #pragma once
 
 #include "Zigbee.h"
-#include "CustomCluster.h"
-
-#define BOARD_LED RGB_BUILTIN
+#include "../modules/AirsoftPoint.h"
 
 class ZigbeeController {
-private:
-    static void checkTask(void* _);
-    
-    inline static bool _confirmed = false;
-    
 public:
-    static void setup();
-    static void confirmed();
+    static void setup(AirsoftPoint* ap);
     static void loop();
 };

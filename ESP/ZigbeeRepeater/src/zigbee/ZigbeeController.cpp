@@ -1,16 +1,14 @@
 #include "ZigbeeController.h"
 
-static CustomCluster _cluster(2, "airsoftPoint", "data");
-
-void ZigbeeController::setup() {
+void ZigbeeController::setup(AirsoftPoint* ap) {
     pinMode(BOOT_PIN, INPUT_PULLUP);
 
-    ZigbeeRangeExtender extender(1);
+    ZigbeeRangeExtender extender(2);
     extender.setManufacturerAndModel("MadMagic", "AirsoftPoint");
     extender.setPowerSource(ZB_POWER_SOURCE_MAINS);
     Zigbee.addEndpoint(&extender);
 
-    Zigbee.addEndpoint(&_cluster);
+    Zigbee.addEndpoint(ap);
 
     Zigbee.setTimeout(INT32_MAX);
     if (!Zigbee.begin(ZIGBEE_ROUTER)) {
@@ -18,34 +16,12 @@ void ZigbeeController::setup() {
         Serial.println("Rebooting...");
         ESP.restart();
     }
-    rgbLedWrite(BOARD_LED, 10, 1, 0);
-    
-    while (!Zigbee.connected()) {
-        delay(100);
-    }
+    rgbLedWrite(RGB_BUILTIN, 10, 1, 0);
 
-    rgbLedWrite(BOARD_LED, 0, 0, 1);
+    while (!Zigbee.connected()) vTaskDelay(pdMS_TO_TICKS(100));
 
-    xTaskCreate(
-        checkTask, "zigbeeCheckTask", 2048,
-        NULL, 1, NULL
-    );
-}
-
-void ZigbeeController::checkTask(void* _) {
-    while (!_confirmed) {
-        _cluster.reportAttribs();
-        delay(1000);
-    }
-
-    vTaskDelete(NULL);
-}
-
-void ZigbeeController::confirmed() {
-    if (_confirmed) return;
-    _confirmed = true;
-
-    rgbLedWrite(RGB_BUILTIN, 0, 1, 0);
+    rgbLedWrite(RGB_BUILTIN, 0, 0, 1);
+    ap->setup();
 }
 
 void ZigbeeController::loop() {

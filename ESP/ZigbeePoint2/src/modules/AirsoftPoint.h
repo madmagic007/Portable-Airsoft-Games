@@ -35,8 +35,9 @@ public:
 private:
     static void checkTask(void* _) {
         while (!_confirmed) {
+            delay(3000);
+            if (_confirmed) break;
             _self->sendValue("online");
-            vTaskDelay(pdMS_TO_TICKS(3000));
         }
         
         vTaskDelete(NULL);

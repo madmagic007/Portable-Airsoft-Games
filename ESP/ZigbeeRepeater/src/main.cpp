@@ -1,13 +1,15 @@
 #include "zigbee/ZigbeeController.h"
+#include "modules/AirsoftPoint.h"
 
 static ZigbeeController zigbee;
+static AirsoftPoint point(1);
 
 void setup() {
     Serial.begin(115200);
-    rgbLedWrite(BOARD_LED, 1, 0, 0);
+    rgbLedWrite(RGB_BUILTIN, 1, 0, 0);
     delay(2000);
 
-    zigbee.setup();
+    zigbee.setup(&point);
 }
 
 void loop() {
