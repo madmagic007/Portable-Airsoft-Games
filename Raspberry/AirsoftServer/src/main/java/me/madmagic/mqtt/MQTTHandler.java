@@ -10,7 +10,8 @@ public class MQTTHandler {
     private static IMqttClient mqtt;
 
     public static void init() throws Exception {
-        mqtt = new MqttClient("tcp://127.0.0.1:1883", "server");
+//        mqtt = new MqttClient("tcp://127.0.0.1:1883", "server");
+        mqtt = new MqttClient("tcp://shark-flip.local:1883", "server");
 
         MqttConnectOptions options = new MqttConnectOptions();
         options.setAutomaticReconnect(true);

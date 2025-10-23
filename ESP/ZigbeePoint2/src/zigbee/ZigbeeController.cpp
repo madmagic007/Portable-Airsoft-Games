@@ -20,9 +20,10 @@ void ZigbeeController::setup(ModuleBase2* modules[], size_t size) {
     }
     rgbLedWrite(RGB_BUILTIN, 10, 1, 0);
 
-    while (!Zigbee.connected()) vTaskDelay(pdMS_TO_TICKS(100));
-
+    while (!Zigbee.connected()) delay(100);
     rgbLedWrite(RGB_BUILTIN, 0, 0, 1);
+
+    delay(1000);
     modules[0]->doSetup();
 }
 

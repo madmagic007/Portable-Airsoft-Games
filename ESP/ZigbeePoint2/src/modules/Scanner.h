@@ -125,14 +125,15 @@ private:
         while (true) {
             if (_command == REPORT) {
                 _command = NONE;
+                
+                digitalWrite(_buzzer, LOW);
                 sendValue(_lastUID);
 
-                if (_delaySec == 0) vTaskDelay(pdMS_TO_TICKS(200)); // visible blink
+                if (_delaySec == 0) delay(200); // visible blink
 
                 digitalWrite(_r, LOW);
                 digitalWrite(_g, LOW);
                 digitalWrite(_b, HIGH);
-                digitalWrite(_buzzer, LOW);
             } else if (_command == FAIL) {
                 _command = NONE;
 
@@ -141,7 +142,7 @@ private:
                 digitalWrite(_b, LOW);
                 digitalWrite(_buzzer, LOW);
 
-                vTaskDelay(pdMS_TO_TICKS(500));
+                delay(500);
 
                 digitalWrite(_r, LOW);
                 digitalWrite(_g, LOW);
@@ -166,7 +167,7 @@ private:
                 }
             }
 
-            vTaskDelay(pdMS_TO_TICKS(50));
+            delay(50);
         }
     }
 

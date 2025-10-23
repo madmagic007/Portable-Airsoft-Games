@@ -17,11 +17,11 @@ const uint8_t scanner1Pins[] = {3, 4, 5, 6, 7, 0, 1, 2}; // sda, clk, mosi, miso
 const uint8_t battery1Pins[] = {21};
 
 static ZigbeeController zigbee;
-static AirsoftPoint airsoftPoint(nullptr, 1, true, true);
-static Scanner scanner(scannerPins, 2, true, true);
-static P9813Driver ledDriver(ledDriverPins, 3, false, true);
-static Buzzer buzzer(buzzerPins, 4, false, true);
-static GenericLed genericLed(genericLedPins, 5, false, true);
+static AirsoftPoint airsoftPoint(nullptr, 1);
+static Scanner scanner(scannerPins, 2);
+static P9813Driver ledDriver(ledDriverPins, 3);
+static Buzzer buzzer(buzzerPins, 4);
+static GenericLed genericLed(genericLedPins, 5);
 //static BatteryMonitor batteryMonitor(batteryPins, &ledDriver); //ugh
 
 static ModuleBase2* modules[] = {
@@ -32,7 +32,7 @@ static size_t modulesSize = sizeof(modules) / sizeof(modules[0]);
 void setup() {
     Serial.begin(115200);
     rgbLedWrite(RGB_BUILTIN, 1, 0, 0);
-    //delay(2000);
+    delay(500);
 
     if (Util::checkPinDischarge(battery1Pins[0]) < 100) {
         scanner.setPins(scanner1Pins);
@@ -42,6 +42,7 @@ void setup() {
     // airsoftPoint get setup in zigbeeController because it polls z2m
     for (size_t i = 1; i < modulesSize; i++) {
         modules[i]->doSetup();
+        delay(100);
     }
     
     zigbee.setup(modules, modulesSize);

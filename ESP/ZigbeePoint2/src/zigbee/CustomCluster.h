@@ -10,11 +10,11 @@
 
 class CustomCluster : public ZigbeeEP {
 public:
-    CustomCluster(uint8_t endpoint, bool hasSender, bool hasReceiver);
+    CustomCluster(uint8_t endpoint);
 
     bool sendValue(const String& str);
 private:
     void defineCluster(uint16_t clusterID);
     bool setValue(uint8_t arr[]);
-    bool reportAttr(uint16_t clusterID, uint16_t attrID);
+    bool reportValue();
 };

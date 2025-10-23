@@ -45,7 +45,7 @@ public:
         latch();
 
         if (_dur == 0) return;
-        vTaskDelay(pdMS_TO_TICKS(_dur));
+        delay(_dur);
 
         sendByte(0b11000000);
         sendByte(0);

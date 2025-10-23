@@ -89,6 +89,7 @@ public class Main {
                 if (GamemodesHandler.handleConsoleInput(line, inScanner)) continue;
 
                 if (line.equals("stop")) {
+                    System.out.println("stopping program...");
                     inScanner.close();
                     GamemodesHandler.stop();
                     MQTTScheduler.stop(); // this calls MQTTHandler.stop and System.exit when the value queue is empty

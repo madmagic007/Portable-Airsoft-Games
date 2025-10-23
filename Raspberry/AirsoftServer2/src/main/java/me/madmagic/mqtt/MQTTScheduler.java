@@ -46,6 +46,7 @@ public class MQTTScheduler {
 
     public static void stop() {
         stopping = true;
+        startIfNotRunning();
     }
 
     public record MQTTMessageTask(String device, int endpoint, String value) {}

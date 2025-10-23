@@ -1,6 +1,6 @@
 #include "CustomCluster.h"
 
-CustomCluster::CustomCluster(uint8_t endpoint, bool hasSender, bool hasReceiver) : ZigbeeEP(endpoint) {
+CustomCluster::CustomCluster(uint8_t endpoint) : ZigbeeEP(endpoint) {
     _device_id = ESP_ZB_HA_SIMPLE_SENSOR_DEVICE_ID;
     _ep_config = {.endpoint = _endpoint, .app_profile_id = ESP_ZB_AF_HA_PROFILE_ID, .app_device_id = ESP_ZB_HA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0};
     
@@ -11,8 +11,8 @@ CustomCluster::CustomCluster(uint8_t endpoint, bool hasSender, bool hasReceiver)
     esp_zb_cluster_list_add_basic_cluster(_cluster_list, esp_zb_basic_cluster_create(NULL), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
     esp_zb_cluster_list_add_identify_cluster(_cluster_list, esp_zb_identify_cluster_create(NULL), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
 
-    if (hasSender) defineCluster(SENDER_CLUSTER_ID);
-    if (hasReceiver) defineCluster(RECEIVER_CLUSTER_ID);
+    defineCluster(SENDER_CLUSTER_ID);
+    defineCluster(RECEIVER_CLUSTER_ID);
 }
 
 void CustomCluster::defineCluster(uint16_t clusterID) {
@@ -46,10 +46,11 @@ bool CustomCluster::sendValue(const String& str) {
     memcpy(buffer + 1, combined.c_str(), len);
 
     setValue(buffer);
-    return reportAttr(SENDER_CLUSTER_ID, VALUE_ATTRIBUTE_ID);
+    delay(100);
+    return reportValue();
 }
 
-boolean CustomCluster::reportAttr(uint16_t clusterID, uint16_t attrID) {
+boolean CustomCluster::reportValue() {
     esp_zb_zcl_report_attr_cmd_t report_attr_cmd = {
         .zcl_basic_cmd = {
             .dst_addr_u = {
@@ -59,10 +60,10 @@ boolean CustomCluster::reportAttr(uint16_t clusterID, uint16_t attrID) {
             .src_endpoint = _endpoint,
         },
         .address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT,
-        .clusterID = clusterID,
+        .clusterID = SENDER_CLUSTER_ID,
         .direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_CLI,
         .manuf_code = ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC,
-        .attributeID = attrID,
+        .attributeID = VALUE_ATTRIBUTE_ID,
     };
     
     esp_zb_lock_acquire(portMAX_DELAY);

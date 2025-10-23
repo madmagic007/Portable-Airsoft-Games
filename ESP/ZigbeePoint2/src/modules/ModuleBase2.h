@@ -12,7 +12,7 @@
 
 class ModuleBase2 : public CustomCluster {
 public:
-    ModuleBase2(const uint8_t* pins, uint8_t endpoint, bool hasSender, bool hasReceiver) : CustomCluster(endpoint, hasSender, hasReceiver), _pins(pins) {}
+    ModuleBase2(const uint8_t* pins, uint8_t endpoint) : CustomCluster(endpoint), _pins(pins) {}
     void setPins(const uint8_t* pins);
     void doSetup();
     void doLoop();

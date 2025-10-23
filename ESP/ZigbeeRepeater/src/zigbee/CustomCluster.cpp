@@ -47,6 +47,7 @@ bool CustomCluster::sendValue(const String& str) {
     memcpy(buffer + 1, combined.c_str(), len);
 
     setValue(buffer);
+    delay(100);
     return reportValue();
 }
 

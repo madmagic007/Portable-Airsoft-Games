@@ -7,12 +7,8 @@ public:
     using ModuleBase2::ModuleBase2;
     
     void setup() override {
-        _self = this;
-        
-        xTaskCreate(
-            checkTask, "zigbeeCheckTask", 2048,
-            NULL, 1, NULL
-        );
+        _setup = true;
+        startTask("zigbeeCheckTask");
     }
 
     static void confirmed() {
@@ -33,11 +29,10 @@ public:
         }
     }
 private:
-    static void checkTask(void* _) {
+    void task() override {
         while (!_confirmed) {
+            sendValue("");
             delay(3000);
-            if (_confirmed) break;
-            _self->sendValue("online");
         }
         
         vTaskDelete(NULL);
@@ -51,5 +46,4 @@ private:
     }
     
     inline volatile static bool _confirmed = false;
-    inline static AirsoftPoint* _self = nullptr;
 };
