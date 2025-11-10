@@ -19,13 +19,12 @@ public class GamemodeBase {
         for (Collection<DeviceBase> collection : withDevices) {
             for (DeviceBase device : collection) {
                 devices.put(device.deviceName, device);
-                device.sendModulesToMQTT();
                 device.applyData();
             }
         }
     }
 
-    protected void parseDevices(String keyName, DeviceCollection collection, int... modules) {
+    protected void parseDevices(String keyName, DeviceCollection collection) {
         JSONObject allDevices = configuration.getJSONObject("devices");
         JSONObject allDeviceData = allDevices.optJSONObject("data", new JSONObject());
 
@@ -39,7 +38,6 @@ public class GamemodeBase {
             JSONObject deviceData = devices.getJSONObject(deviceName);
 
             DeviceBase device = DeviceHandler.getOrCreateByName(deviceName);
-            device.setModules(modules);
             device.data.clear();
             device.mergeData(allDeviceData);
             device.mergeData(sharedData);
@@ -61,8 +59,8 @@ public class GamemodeBase {
     public void start(JSONObject configuration) {
         this.configuration = configuration;
 
-        parseDevices("spawns", spawns, DeviceModule.GENERIC);
-        parseDevices("medics", medics, DeviceModule.GENERIC);
+        parseDevices("spawns", spawns);
+        parseDevices("medics", medics);
 
         registerDevices(spawns.values(), medics.values());
     }

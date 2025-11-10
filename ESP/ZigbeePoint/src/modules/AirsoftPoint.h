@@ -1,48 +1,55 @@
 #pragma once
 
-#include "ModuleBase.h"
-#include "../zigbee/ZigbeeController.h"
-#include "map"
+#include "ModuleBase2.h"
 
-class AirsoftPoint : public ModuleBase {
+class AirsoftPoint : public ModuleBase2 {
 public:
-    using ModuleBase::ModuleBase;
-
-    void set(std::map<String, ModuleBase*>& modules, CustomCluster* clusters, size_t clusterSize) {
-        _modules = &modules;
-        _clusters = clusters;
-        _clusterSize = clusterSize;
-
-        _setup =  true;
+    using ModuleBase2::ModuleBase2;
+    
+    void setup() override {
+        _self = this;
+        
+        xTaskCreate(
+            checkTask, "zigbeeCheckTask", 2048,
+            NULL, 1, NULL
+        );
     }
 
+    static void confirmed() {
+        if (_confirmed) return;
+
+        rgbLedWrite(RGB_BUILTIN, 0, 1, 0);
+        _confirmed = true;
+    }
+    
     void receiveData(uint8_t arr[], size_t size) override {
-        ZigbeeController::confirmed();
-
-        if (!_reportedAttribs) {
-            Serial.println("reporting attribs");
-
-            _reportedAttribs = true;
-            for (size_t i = 1; i < _clusterSize; i++) {
-                _clusters[i].reportAttribs();
-            }
-        }
-
-        size_t n = min(min(size, _modules->size() - 1), _clusterSize - 1);
-        if (n == 0) return;
-
-        for (size_t i = 0; i < n; i++) {
-            if (arr[i] != '1') continue;
-
-            if (_clusters[i + 1]._linkedModule) {
-                _clusters[i + 1]._linkedModule->doSetup();
-            }
+        String str = String(arr, size);
+        
+        if (str == "restart") {
+            xTaskCreate(
+                restartTask, "restartTask", 2048,
+                NULL, 1, NULL
+            );
         }
     }
-
 private:
-    std::map<String, ModuleBase*>* _modules;
-    CustomCluster* _clusters;
-    size_t _clusterSize;
-    bool _reportedAttribs;
+    static void checkTask(void* _) {
+        while (!_confirmed) {
+            delay(3000);
+            if (_confirmed) break;
+            _self->sendValue("online");
+        }
+        
+        vTaskDelete(NULL);
+    }
+    
+    static void restartTask(void* _) {
+        delay(1000);
+        ESP.restart();
+        
+        vTaskDelete(NULL);
+    }
+    
+    inline volatile static bool _confirmed = false;
+    inline static AirsoftPoint* _self = nullptr;
 };

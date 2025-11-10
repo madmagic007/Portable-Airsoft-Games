@@ -1,13 +1,12 @@
 #pragma once
 
-#include "ModuleBase.h"
+#include "ModuleBase2.h"
 
-class Buzzer : public ModuleBase {
+class Buzzer : public ModuleBase2 {
 public:
-    using ModuleBase::ModuleBase;
+    using ModuleBase2::ModuleBase2;
 
     void setup() override {
-        Serial.println("setup buzzer");
         pinMode(_pins[0], OUTPUT);
         digitalWrite(_pins[0], LOW);
     }
@@ -18,6 +17,7 @@ public:
         buf[size] = '\0';
         
         _buzzDuration = atof(buf);
+        
         startTask("buzzerTask");
     }
 

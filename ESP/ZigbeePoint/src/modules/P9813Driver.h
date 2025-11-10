@@ -1,14 +1,12 @@
 #pragma once
 
-#include "ModuleBase.h"
+#include "ModuleBase2.h"
 
-class P9813Driver : public ModuleBase {
+class P9813Driver : public ModuleBase2 {
 public:
-    using ModuleBase::ModuleBase;
+    using ModuleBase2::ModuleBase2;
 
-    void setup() override {
-        Serial.println("driver setup");
-        
+    void setup() override {        
         _data = _pins[0];
         _clk = _pins[1];
 
@@ -54,19 +52,7 @@ public:
         sendByte(0);
         sendByte(0);
         latch();
-    }
-
-    float getPowerFactor() {
-        if (!_setup) return 0;
-
-        float pc = 0;
-        pc += _r/255;
-        pc += _g/255;
-        pc += _b/255;
-
-        return pc;
-    }
-    
+    }    
 private:
     void sendBit(bool bitVal) {
         digitalWrite(_data, bitVal);

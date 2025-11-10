@@ -1,116 +1,104 @@
 #pragma once
 
-#include "ModuleBase.h"
-#include "MFRC522.h"
+#include "ModuleBase2.h"
+#include "PN532_HSU.h"
+#include "PN532.h"
 
-class Scanner : public ModuleBase {
-public:
-    using ModuleBase::ModuleBase;
+static PN532_HSU pn532hsu(Serial1, RX, TX);
+static PN532 nfc(pn532hsu);
 
+class Scanner : public ModuleBase2 {
+    public:
+    using ModuleBase2::ModuleBase2;
+    
     void setup() override {
-        Serial.println("scanner setup");
-        _rst = _pins[4];
-        _r = _pins[5];
-        _g = _pins[6];
-        _b = _pins[7];
-        _buzzer = _pins[8];
+        _r = _pins[0];
+        _g = _pins[1];
+        _b = _pins[2];
+        _buzzer = _pins[3];
 
-        pinMode(_rst, OUTPUT);
-        digitalWrite(_rst, HIGH);
+        nfc.begin();
+        nfc.SAMConfig();
         delay(50);
-
-        SPI.begin(_pins[1], _pins[3], _pins[2]);
-        _mfrc522 = new MFRC522(_pins[0], 255); // SDA, unused RST
-
+        nfc.powerDownMode();
+        
         pinOutput(_r);
         pinOutput(_g);
         pinOutput(_b);
         pinOutput(_buzzer);
     }
-
+    
     void receiveData(uint8_t arr[], size_t size) override {
         char buf[size + 1];
         memcpy(buf, arr, size);
         buf[size] = '\0';
         
         uint8_t n = sscanf(buf, "%f|%f|%f", &_delaySec, &_buzzDuration, &_buzzPause);
-
+        
         if (n == 1) {
             _buzzDuration = 0;
             _buzzPause = 0;
         }
-
-        digitalWrite(_rst, LOW);
-
+        
         if (_delaySec >= 0) {
-            delay(50);
-            digitalWrite(_rst, HIGH);
-            delay(50);
-            _mfrc522->PCD_Init();
-
+            pn532hsu.wakeup();
             startTask("ScannerLoopTask");
-
+            
             digitalWrite(_r, LOW);
             digitalWrite(_g, LOW);
             digitalWrite(_b, HIGH);
         } else {
+            nfc.powerDownMode();
+            stopTask();
+
             digitalWrite(_r, LOW);
             digitalWrite(_g, LOW);
             digitalWrite(_b, LOW);
-
-            stopTask();
         }
     }
-
+    
     void loop() {
         if (_delaySec < 0) return;
-
-        bool present = _mfrc522->PICC_IsNewCardPresent() && _mfrc522->PICC_ReadCardSerial();
+        
+        uint8_t success;
+        uint8_t uid[] = { 0, 0, 0, 0, 0, 0, 0 };
+        uint8_t uidLength;
+        
+        bool present = nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLength, 100);
         unsigned long now = millis();
-
+        
         switch (_cardState) {
             case WAIT:
                 if (present) {
+                    _lastUID = getUidStr(uid, uidLength);
                     _cardDetectedTime = now;
                     _cardAbsentStart = 0;
                     _cardState = DETECTED;
-                    Serial.println("detected");
-
-                    String uidStr = "";
-                    for (byte i = 0; i < _mfrc522->uid.size; i++) {
-                        if (_mfrc522->uid.uidByte[i] < 0x10) uidStr += "0";
-                        uidStr += String(_mfrc522->uid.uidByte[i], HEX);
-                    }
-
-                    _lastUID = uidStr;
                     _buzzState = false;
-
+                    
                     digitalWrite(_r, LOW);
                     digitalWrite(_g, HIGH);
                     digitalWrite(_b, LOW);
                 }
-                break;
-
+            break;
+            
             case DETECTED:
                 if (!present) {
-                    Serial.println("not present");
                     if (_cardAbsentStart == 0) _cardAbsentStart = now;
                     else if (now - _cardAbsentStart >= 200) {
-                    Serial.println("not present for 200ms");
                         _command = FAIL; 
                         _cardState = WAIT_REMOVED;
                         _cardAbsentStart = now;
                     }
                 } else {
-                    Serial.println("detected and present");
                     _cardAbsentStart = 0;
                     if (now - _cardDetectedTime >= _delaySec * 1000UL) {
                         _command = REPORT; 
                         _cardState = WAIT_REMOVED;
                     }
                 }
-                break;
-
+            break;
+                
             case WAIT_REMOVED:
                 if (!present) {
                     if (_cardAbsentStart == 0) _cardAbsentStart = now;
@@ -121,46 +109,43 @@ public:
                 } else {
                     _cardAbsentStart = 0;
                 }
-                break;
+            break;
         }
     }
-
-private:
+    
+    private:
     void task() {
         while (true) {
             if (_command == REPORT) {
                 _command = NONE;
-
-                digitalWrite(_buzzer, LOW); // buzzer low before report, otherwise zigbee buzz command stops too soon
-                Serial.println("reporting value");
-                reportValue(_lastUID);
-
+                sendValue(_lastUID);
+                
                 if (_delaySec == 0) vTaskDelay(pdMS_TO_TICKS(200)); // visible blink
-
+                
                 digitalWrite(_r, LOW);
                 digitalWrite(_g, LOW);
                 digitalWrite(_b, HIGH);
+                digitalWrite(_buzzer, LOW);
             } else if (_command == FAIL) {
                 _command = NONE;
-
+                
                 digitalWrite(_r, HIGH);
                 digitalWrite(_g, LOW);
                 digitalWrite(_b, LOW);
                 digitalWrite(_buzzer, LOW);
-
+                
                 vTaskDelay(pdMS_TO_TICKS(500));
-
+                
                 digitalWrite(_r, LOW);
                 digitalWrite(_g, LOW);
                 digitalWrite(_b, HIGH);
             }
-
+            
             if (_cardState == DETECTED && _buzzPause > 0 && _buzzDuration > 0) {
                 unsigned long now = millis();
-
+                
                 if (_buzzState) {
                     if (now - _lastBuzz >= _buzzDuration * 1000UL) {
-                        Serial.println("buzz low");
                         digitalWrite(_buzzer, LOW);
                         _buzzState = false;
                         _lastBuzz = now;
@@ -173,13 +158,21 @@ private:
                     }
                 }
             }
-
+            
             vTaskDelay(pdMS_TO_TICKS(50));
         }
     }
-
-    MFRC522* _mfrc522;
-    uint8_t _rst, _r, _g, _b, _buzzer;
+    
+    String getUidStr(const uint8_t *buffer, size_t length) {
+        String result = "";
+        for (size_t i = 0; i < length; i++) {
+            if (buffer[i] < 0x10) result += "0";
+            result += String(buffer[i], HEX);
+        }
+        return result;
+    }
+    
+    uint8_t _r, _g, _b, _buzzer;
     float _delaySec = -1;
     float _buzzDuration, _buzzPause;
     bool _buzzState;
@@ -187,19 +180,19 @@ private:
     unsigned long _cardDetectedTime = 0;
     unsigned long _cardAbsentStart = 0;
     String _lastUID = "";
-
+    
     enum CardState{
         WAIT,
         DETECTED,
         WAIT_REMOVED
     };
-
+    
     enum TaskCommand {
         NONE,
         REPORT,
         FAIL
     };
-
+    
     CardState _cardState = WAIT;
     TaskCommand _command = NONE;
 };

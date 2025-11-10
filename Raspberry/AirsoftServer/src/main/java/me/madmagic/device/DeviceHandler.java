@@ -1,7 +1,5 @@
 package me.madmagic.device;
 
-import me.madmagic.mqtt.MQTTHandler;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -11,14 +9,14 @@ public class DeviceHandler {
     public static Map<String, DeviceBase> activeDevices = new HashMap<>();
 
     public static void init() {
-        MQTTHandler.subscribe("battery", (deviceName, payload) -> {
-            String value = payload.optString("value", "");
-            DeviceBase device = getByName(deviceName);
-
-            if (value.isBlank() || device == null) return;
-
-            device.data.put("battery", value);
-        });
+//        MQTTHandler.subscribe("battery", (deviceName, payload) -> {
+//            String value = payload.optString("value", "");
+//            DeviceBase device = getByName(deviceName);
+//
+//            if (value.isBlank() || device == null) return;
+//
+//            device.data.put("battery", value);
+//        });
     }
 
     public static DeviceBase getByName(String name) {

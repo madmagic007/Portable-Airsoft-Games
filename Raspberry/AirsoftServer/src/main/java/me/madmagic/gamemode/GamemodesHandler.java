@@ -1,6 +1,7 @@
 package me.madmagic.gamemode;
 
 import me.madmagic.StatsHandler;
+import me.madmagic.device.DeviceBase;
 import me.madmagic.device.DeviceHandler;
 import me.madmagic.gamemode.gamemodes.Domination;
 import me.madmagic.gamemode.gamemodes.Register;
@@ -15,8 +16,8 @@ import java.util.Scanner;
 
 public class GamemodesHandler {
 
-    private static Map<String, Long> scanTimes = new HashMap<>();
-    private static int minScansDelaySeconds = 5;
+    private static final Map<String, Long> scanTimes = new HashMap<>();
+    private static final int minScansDelaySeconds = 5;
 
     private static final Map<String, GamemodeBase> gamemodes = new HashMap<>() {{
         put("register", new Register());
@@ -27,20 +28,21 @@ public class GamemodesHandler {
     private static GamemodeBase activeGamemode;
 
     public static void init() {
-        MQTTHandler.subscribe("airsoftPoint", (device, payload) -> {
-            System.out.println("Device reported itself: " + device);
+        MQTTHandler.subscribe(MQTTMessage.AIRSOFTPOINT, (deviceName, payload) -> {
+            System.out.println("Device reported itself: " + deviceName);
+            DeviceBase device = DeviceHandler.getByName(deviceName);
 
-            DeviceHandler.getByName(device, dev -> {
-                if (activeGamemode == null) {
-                    MQTTMessage.DATA.schedule(device, "");
-                } else {
-                    dev.sendModulesToMQTT();
-                    dev.applyData();
-                }
-            });
+            if (device != null) {
+                System.out.println("applying gamemode data");
+                device.applyData();
+                return;
+            }
+
+            System.out.println("acking online");
+            MQTTMessage.AIRSOFTPOINT.schedule(deviceName, "");
         });
 
-        MQTTHandler.subscribe("scannedTag", (device, payload) -> {
+        MQTTHandler.subscribe(MQTTMessage.SCANNER, (device, payload) -> {
             System.out.println("received handler");
             if (activeGamemode == null) return;
 

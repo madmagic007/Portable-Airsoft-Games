@@ -4,7 +4,6 @@ import me.madmagic.Main;
 import me.madmagic.StatsHandler;
 import me.madmagic.device.DeviceBase;
 import me.madmagic.device.DeviceCollection;
-import me.madmagic.device.DeviceModule;
 import me.madmagic.gamemode.GamemodeBase;
 import org.json.JSONObject;
 
@@ -26,7 +25,7 @@ public class Register extends GamemodeBase {
     @Override
     public void start(JSONObject configuration) {
         super.start(configuration);
-        parseDevices("scanner", scanner, DeviceModule.GENERIC);
+        parseDevices("scanner", scanner);
         registerDevices(scanner.values());
     }
 

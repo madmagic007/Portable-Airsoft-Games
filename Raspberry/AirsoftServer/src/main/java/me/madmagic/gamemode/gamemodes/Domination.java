@@ -3,7 +3,6 @@ package me.madmagic.gamemode.gamemodes;
 import me.madmagic.StatsHandler;
 import me.madmagic.device.DeviceBase;
 import me.madmagic.device.DeviceCollection;
-import me.madmagic.device.DeviceModule;
 import me.madmagic.gamemode.GamemodeBase;
 import org.json.JSONObject;
 
@@ -16,8 +15,8 @@ public class Domination extends GamemodeBase {
     public void start(JSONObject configuration) {
         super.start(configuration);
 
-        parseDevices("hardPoints", hardPoints, DeviceModule.CAPTURE_POINT);
-        parseDevices("softPoints", softPoints, DeviceModule.GENERIC);
+        parseDevices("hardPoints", hardPoints);
+        parseDevices("softPoints", softPoints);
 
         registerDevices(hardPoints.values(), softPoints.values());
     }

@@ -3,20 +3,13 @@ package me.madmagic.device;
 import me.madmagic.mqtt.MQTTMessage;
 import org.json.JSONObject;
 
-import java.util.Arrays;
-
 public class DeviceBase {
 
     public final String deviceName;
-    public int[] modules;
     public final JSONObject data = new JSONObject();
 
     public DeviceBase(String deviceNam) {
         this.deviceName = deviceNam;
-    }
-
-    public void setModules(int... modules) {
-        this.modules = modules;
     }
 
     public void mergeData(JSONObject data) {
@@ -25,48 +18,28 @@ public class DeviceBase {
         });
     }
 
-    public void sendModulesToMQTT() {
-        if (modules == null || modules.length == 0) {
-            MQTTMessage.DATA.schedule(deviceName, "");
-            return;
-        }
-
-        int max = 0;
-        for (int val : modules) {
-            if (val > max) max = val;
-        }
-
-        char[] result = new char[max + 1];
-        Arrays.fill(result, '0');
-
-        for (int val : modules) {
-            result[val] = '1';
-        }
-
-        MQTTMessage.DATA.schedule(deviceName, new String(result));
-    }
-
     public void applyData() {
-        MQTTMessage.SCANNER_SETTINGS.scheduleIfInData(deviceName, data);
+        MQTTMessage.SCANNER.scheduleIfInData(deviceName, data);
         MQTTMessage.DRIVER_COLOR.scheduleIfInData(deviceName, data);
         MQTTMessage.GENERIC_COLOR.scheduleIfInData(deviceName, data);
     }
 
     public void idle() {
         data.clear();
-        setScannerSettings(-1);
-        setDriverColor(0, 0, 0);
-        setGenericColor(0, 0, 0);
-        buzz(0);
+//        setScannerSettings(-1);
+//        setDriverColor(0, 0, 0);
+//        setGenericColor(0, 0, 0);
+//        buzz(0);
+        MQTTMessage.AIRSOFTPOINT.schedule(deviceName, "restart");
     }
 
     public void setScannerSettings(float scanDuration) {
-        MQTTMessage.SCANNER_SETTINGS.schedule(deviceName, scanDuration);
+        MQTTMessage.SCANNER.schedule(deviceName, scanDuration);
     }
 
     public void setScannerSettings(float scanDuration, float buzzDuration, float buzzPause) {
         String msg = String.format("%f|%f|%f", scanDuration, buzzDuration, buzzPause);
-        MQTTMessage.SCANNER_SETTINGS.schedule(deviceName, msg);
+        MQTTMessage.SCANNER.schedule(deviceName, msg);
     }
 
     public void buzz(int durationSeconds) {

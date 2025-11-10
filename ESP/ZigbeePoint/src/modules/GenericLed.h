@@ -1,13 +1,12 @@
 #pragma once
 
-#include "ModuleBase.h"
+#include "ModuleBase2.h"
 
-class GenericLed : public ModuleBase {
+class GenericLed : public ModuleBase2 {
 public:
-    using ModuleBase::ModuleBase;
+    using ModuleBase2::ModuleBase2;
 
     void setup() override {
-        Serial.println("generic led setup");
         _pinR = _pins[0];
         _pinG = _pins[1];
         _pinB = _pins[2];

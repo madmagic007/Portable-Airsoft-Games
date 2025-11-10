@@ -1,19 +1,10 @@
 #pragma once
 
 #include "Zigbee.h"
-#include "CustomCluster.h"
-
-#define BOARD_LED RGB_BUILTIN
+#include "../modules/ModuleBase2.h"
 
 class ZigbeeController {
-private:
-    static void checkTask(void* _);
-
-    inline static CustomCluster* _clusters = nullptr; 
-    inline static bool _confirmed = false;
-    
 public:
-    static void setup(CustomCluster* clusters, size_t size);
-    static void confirmed();
+    static void setup(ModuleBase2* clusters[], size_t size);
     static void loop();
 };

@@ -10,7 +10,6 @@ import org.json.JSONTokener;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.net.URISyntaxException;
 import java.util.Scanner;
 
@@ -60,7 +59,7 @@ public class Main {
         JSONObject users;
         try (FileInputStream fis = new FileInputStream(usersFile)) {
             users = new JSONObject(new JSONTokener(fis));
-        } catch (FileNotFoundException ignored) {
+        } catch (Exception ignored) {
             if (isRegister) users = new JSONObject();
             else {
                 System.out.println("Failed to read AirsoftUsers.json");
@@ -92,7 +91,7 @@ public class Main {
                 if (line.equals("stop")) {
                     inScanner.close();
                     GamemodesHandler.stop();
-                    MQTTScheduler.stop(); // this calls MQTTHandler.stop and System.exit when the message queue is empty
+                    MQTTScheduler.stop(); // this calls MQTTHandler.stop and System.exit when the value queue is empty
                     break;
                 }
             }

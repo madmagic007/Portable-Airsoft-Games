@@ -3,23 +3,25 @@ package me.madmagic.mqtt;
 import org.json.JSONObject;
 
 public enum MQTTMessage {
-    SCANNER_SETTINGS("scannerSettings"),
-    DRIVER_COLOR("setDriverColor"),
-    BUZZ("buzz"),
-    GENERIC_COLOR("setGenericColor"),
-    DATA("data");
+    AIRSOFTPOINT(1, ""),
+    SCANNER(2, "scannerSettings"),
+    DRIVER_COLOR(3, "driverColor"),
+    BUZZ(4, ""),
+    GENERIC_COLOR(5, "genericColor");
 
-    private final String topic;
+    public final int endpoint;
+    private final String configKey;
 
-    MQTTMessage(String topic) {
-        this.topic = topic;
+    MQTTMessage(int endpoint, String configKey) {
+        this.endpoint = endpoint;
+        this.configKey = configKey;
     }
 
     public void schedule(String deviceName, Object value) {
-        MQTTScheduler.schedule(deviceName, topic, value.toString());
+        MQTTScheduler.schedule(deviceName, endpoint, value.toString());
     }
 
     public void scheduleIfInData(String deviceName, JSONObject data) {
-        if (data.has(topic)) schedule(deviceName, data.get(topic));
+        if (!configKey.isEmpty() && data.has(configKey)) schedule(deviceName, data.get(configKey));
     }
 }

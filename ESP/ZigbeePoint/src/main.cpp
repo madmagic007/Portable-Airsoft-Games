@@ -3,93 +3,42 @@
 #include "modules/Scanner.h"
 #include "modules/P9813Driver.h"
 #include "modules/Buzzer.h"
-#include "modules/BatteryMonitor.h"
 #include "modules/GenericLed.h"
 
-const uint8_t scannerPins[] = {4, 5, 6, 7, 23, 1, 2, 3, 20}; // sda, clk, mosi, miso, rst, R, G, B, buzzer
-const uint8_t ledDriverPins[] = {15, 14}; // data clk
 const uint8_t buzzerPins[] = {20};
-const uint8_t batteryPins[] = {0};
+const uint8_t scannerPins[] = {2, 1, 0, buzzerPins[0]}; // R, G, B, buzzer
+const uint8_t ledDriverPins[] = {15, 14}; // data, clk
 const uint8_t genericLedPins[] = {14, 15, 20}; // R, G, B
 
-// faulty one, 2 use this layout
-const uint8_t scanner1Pins[] = {3, 4, 5, 6, 7, 0, 1, 2}; // sda, clk, mosi, miso, rst, R, G, B
-const uint8_t battery1Pins[] = {21};
-
 static ZigbeeController zigbee;
-static AirsoftPoint airsoftPoint(nullptr);
-static Scanner scanner(scannerPins);
-static P9813Driver ledDriver(ledDriverPins);
-static Buzzer buzzer(buzzerPins);
-static BatteryMonitor batteryMonitor(batteryPins, &ledDriver);
-static GenericLed genericLed(genericLedPins);
+static AirsoftPoint airsoftPoint(nullptr, 1, true, true);
+static Scanner scanner(scannerPins, 2, true, true);
+static P9813Driver ledDriver(ledDriverPins, 3, false, true);
+static Buzzer buzzer(buzzerPins, 4, false, true);
+static GenericLed genericLed(genericLedPins, 5, false, true);
 
-static std::map<String, ModuleBase*> modules = {
-    { "airsoftPoint", &airsoftPoint },
-    { "scanner", &scanner },
-    { "ledDriver", &ledDriver },
-    { "buzzer", &buzzer },
-    { "battery", &batteryMonitor },
-    { "genericLed", &genericLed },
+static ModuleBase2* modules[] = {
+    &airsoftPoint, &scanner, &ledDriver, &buzzer, &genericLed
 };
+static size_t modulesSize = sizeof(modules) / sizeof(modules[0]);
 
-static CustomCluster clusters[] = {
-    { 2, "airsoftPoint", "data" , "airsoftPoint" },
-    { 3, "scannedTag", "scannerSettings", "scanner" },  // 10000
-    { 4, "", "setDriverColor", "ledDriver" },           // 01000
-    { 5, "", "buzz", "buzzer"},                         // 00100
-    { 6, "battery", "batterySettings", "battery" },     // 00010
-    { 7, "", "setGenericColor", "genericLed" }          // 00001
-};
-static size_t clusterSize = sizeof(clusters) / sizeof(clusters[0]);
-
-uint32_t checkPinDischarge(uint8_t pin) {
-    uint32_t sum = 0;
-
-    for (int i = 0; i < 5; i++) {
-        pinMode(pin, OUTPUT);
-        digitalWrite(pin, HIGH);
-        delayMicroseconds(5);
-
-        pinMode(pin, INPUT);
-        uint32_t t0 = micros();
-        while (digitalRead(pin) == HIGH) {
-            if ((micros() - t0) > 200) break;
-        }
-        sum += (micros() - t0);
-
-        delay(2);
-    }
-
-    return sum / 5;
-}
 void setup() {
     Serial.begin(115200);
-    rgbLedWrite(BOARD_LED, 1, 0, 0);
+    rgbLedWrite(RGB_BUILTIN, 1, 0, 0);
     delay(2000);
 
-    // check for wrong wired device
-    uint32_t dt = checkPinDischarge(battery1Pins[0]);
-    if (dt < 100) {
-        scanner.setPins(scanner1Pins);
-        batteryMonitor.setPins(battery1Pins);
-        Serial.println("odd device");
-    }
-        Serial.println("passed");
-
-    airsoftPoint.set(modules, clusters, clusterSize);
-    for (CustomCluster& c : clusters) {
-        c.setup(modules);
+    // airsoftPoint get setup in zigbeeController because it polls z2m
+    for (size_t i = 1; i < modulesSize; i++) {
+        modules[i]->doSetup();
     }
     
-    zigbee.setup(clusters, clusterSize);
+    zigbee.setup(modules, modulesSize);
 }
 
 void loop() {
     zigbee.loop();
     
-    for (auto& pair : modules) {
-        ModuleBase* module = pair.second;
-        module->doLoop();
+    for (size_t i = 0; i < modulesSize; i++) {
+        modules[i]->doLoop();
     }
 }

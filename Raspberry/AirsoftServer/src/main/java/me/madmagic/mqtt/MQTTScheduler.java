@@ -10,8 +10,8 @@ public class MQTTScheduler {
     private static boolean running = false;
     private static boolean stopping = false;
 
-    public static synchronized void schedule(String device, String topic, String message) {
-        queue.add(new MQTTMessageTask(device, topic, message));
+    public static synchronized void schedule(String device, int endpoint, String message) {
+        queue.add(new MQTTMessageTask(device, endpoint, message));
         startIfNotRunning();
     }
 
@@ -48,5 +48,5 @@ public class MQTTScheduler {
         stopping = true;
     }
 
-    public record MQTTMessageTask(String device, String topic, String message) {}
+    public record MQTTMessageTask(String device, int endpoint, String value) {}
 }

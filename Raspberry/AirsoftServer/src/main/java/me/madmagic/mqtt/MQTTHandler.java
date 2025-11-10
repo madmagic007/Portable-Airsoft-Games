@@ -26,30 +26,29 @@ public class MQTTHandler {
         }
     }
 
-    public static void subscribe(String endpoint, BiConsumer<String, JSONObject> consumer) {
+    public static void subscribe(MQTTMessage ep, BiConsumer<String, JSONObject> consumer) {
         try {
-            mqtt.subscribe("airsoft/" + endpoint, (topic, msg) -> {
+            mqtt.subscribe("airsoft/" + ep.endpoint, (topic, msg) -> {
                 JSONObject o = new JSONObject(msg.toString());
                 consumer.accept(o.getString("device"), o);
             });
         } catch (Exception ignored) {}
     }
 
-    public static void publish(String device, JSONObject post) {
-        MqttMessage msg = new MqttMessage(new JSONObject().put("write", post).toString().getBytes());
+    private static void publish(String device, String message) {
+        MqttMessage msg = new MqttMessage(new JSONObject().put("write", message).toString().getBytes());
 
         try {
             mqtt.publish("airsoft/" + device + "/set", msg);
-            //System.out.println(post.toString(4));
         } catch (Exception e) {
             System.out.println("Unable to send mqtt message: " + e.getMessage());
-            System.out.println(post.toString(4));
+            System.out.println(message);
             System.out.println(device);
             System.out.println();
         }
     }
 
     public static void publish(MQTTScheduler.MQTTMessageTask task) {
-        publish(task.device(), new JSONObject().put(task.topic(), task.message()));
+        publish(task.device(), String.format("%s|%s", task.endpoint(), task.value()));
     }
 }

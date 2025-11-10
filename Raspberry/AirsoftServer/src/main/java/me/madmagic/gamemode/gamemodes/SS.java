@@ -3,12 +3,9 @@ package me.madmagic.gamemode.gamemodes;
 import me.madmagic.StatsHandler;
 import me.madmagic.device.DeviceBase;
 import me.madmagic.device.DeviceCollection;
-import me.madmagic.device.DeviceModule;
 import me.madmagic.gamemode.GamemodeBase;
 import org.json.JSONArray;
 import org.json.JSONObject;
-
-import javax.swing.*;
 
 public class SS extends GamemodeBase {
 
@@ -18,7 +15,7 @@ public class SS extends GamemodeBase {
     public void start(JSONObject configuration) {
         super.start(configuration);
 
-        parseDevices("points", points, DeviceModule.GENERIC);
+        parseDevices("points", points);
 
         registerDevices(points.values());
     }
