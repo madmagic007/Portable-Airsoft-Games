@@ -12,7 +12,7 @@ class CustomCluster : public ZigbeeEP {
 public:
     CustomCluster(uint8_t endpoint, bool hasSender, bool hasReceiver);
 
-    bool sendValue(const String& str);
+    void sendValue(const String& str);
 private:
     void defineCluster(uint16_t clusterID);
     void setValue(uint8_t arr[]);

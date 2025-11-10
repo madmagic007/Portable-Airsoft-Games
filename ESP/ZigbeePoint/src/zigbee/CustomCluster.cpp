@@ -31,7 +31,7 @@ void CustomCluster::setValue(uint8_t arr[]) {
     esp_zb_lock_release();
 }
 
-bool CustomCluster::sendValue(const String& str) {
+void CustomCluster::sendValue(const String& str) {
     String combined = String(_endpoint) + "|" + str;
     uint8_t len = combined.length();
     uint8_t buffer[len + 1];
@@ -39,7 +39,7 @@ bool CustomCluster::sendValue(const String& str) {
     memcpy(buffer + 1, combined.c_str(), len);
 
     setValue(buffer);
-    return reportAttr(SENDER_CLUSTER_ID, VALUE_ATTRIBUTE_ID);
+    reportAttr(SENDER_CLUSTER_ID, VALUE_ATTRIBUTE_ID);
 }
 
 void CustomCluster::reportAttr(uint16_t clusterID, uint16_t attrID) {
