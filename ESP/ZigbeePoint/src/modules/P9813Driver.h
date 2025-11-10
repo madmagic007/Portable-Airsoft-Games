@@ -36,8 +36,6 @@ public:
     }
 
     void task() override {
-        Serial.printf("driver: %d, %d, %d, %d\n", _r, _g, _b, _dur);
-
         sendByte(0b11000000);
         sendByte(_b);
         sendByte(_g);

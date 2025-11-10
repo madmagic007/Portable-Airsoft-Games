@@ -17,7 +17,7 @@ import java.util.Scanner;
 public class GamemodesHandler {
 
     private static final Map<String, Long> scanTimes = new HashMap<>();
-    private static final int minScansDelaySeconds = 5;
+    private static final int minScansDelaySeconds = 3;
 
     private static final Map<String, GamemodeBase> gamemodes = new HashMap<>() {{
         put("register", new Register());
@@ -52,10 +52,10 @@ public class GamemodesHandler {
             String deviceKey = device + payload;
             long curTime = System.currentTimeMillis();
             long lastScanTime = scanTimes.getOrDefault(deviceKey, 0L);
+            scanTimes.put(deviceKey, curTime);
 
             if (curTime - lastScanTime <= minScansDelaySeconds * 1000L) return;
 
-            scanTimes.put(deviceKey, curTime);
             activeGamemode.onTagScannedWrapper(device, value);
         });
     }

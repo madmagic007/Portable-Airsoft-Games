@@ -23,19 +23,12 @@ void CustomCluster::defineCluster(uint16_t clusterID) {
     esp_zb_cluster_list_add_custom_cluster(_cluster_list, cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
 }
 
-bool CustomCluster::setValue(uint8_t arr[]) {
+void CustomCluster::setValue(uint8_t arr[]) {
     esp_zb_lock_acquire(portMAX_DELAY);
     esp_zb_zcl_status_t ret = esp_zb_zcl_set_manufacturer_attribute_val(
         _endpoint, SENDER_CLUSTER_ID, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC, VALUE_ATTRIBUTE_ID, arr, false
     );
     esp_zb_lock_release();
-
-    if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
-        Serial.printf("Failed to set input: 0x%x: %s\n", ret, esp_zb_zcl_status_to_name(ret));
-        return false;
-    }
-    
-    return true;
 }
 
 bool CustomCluster::sendValue(const String& str) {
@@ -49,7 +42,7 @@ bool CustomCluster::sendValue(const String& str) {
     return reportAttr(SENDER_CLUSTER_ID, VALUE_ATTRIBUTE_ID);
 }
 
-boolean CustomCluster::reportAttr(uint16_t clusterID, uint16_t attrID) {
+void CustomCluster::reportAttr(uint16_t clusterID, uint16_t attrID) {
     esp_zb_zcl_report_attr_cmd_t report_attr_cmd = {
         .zcl_basic_cmd = {
             .dst_addr_u = {
@@ -68,9 +61,4 @@ boolean CustomCluster::reportAttr(uint16_t clusterID, uint16_t attrID) {
     esp_zb_lock_acquire(portMAX_DELAY);
     esp_err_t err = esp_zb_zcl_report_attr_cmd_req(&report_attr_cmd);
     esp_zb_lock_release();
-    if (err != ESP_OK) {
-        Serial.printf("Failed to send report: 0x%x: %s\n", err, esp_err_to_name(err));
-        return false;
-    }
-    return true;
 }

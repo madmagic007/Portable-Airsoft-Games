@@ -15,6 +15,6 @@ public:
     bool sendValue(const String& str);
 private:
     void defineCluster(uint16_t clusterID);
-    bool setValue(uint8_t arr[]);
-    bool reportAttr(uint16_t clusterID, uint16_t attrID);
+    void setValue(uint8_t arr[]);
+    void reportAttr(uint16_t clusterID, uint16_t attrID);
 };

@@ -25,7 +25,6 @@ static size_t modulesSize = sizeof(modules) / sizeof(modules[0]);
 void setup() {
     Serial.begin(115200);
     rgbLedWrite(RGB_BUILTIN, 1, 0, 0);
-    delay(2000);
 
     // airsoftPoint get setup in zigbeeController because it polls z2m
     for (size_t i = 1; i < modulesSize; i++) {
