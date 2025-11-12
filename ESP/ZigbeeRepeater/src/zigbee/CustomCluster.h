@@ -1,7 +1,6 @@
 #pragma once
 
 #include "ZigbeeEP.h"
-#include "../Util.h"
 
 #define SENDER_CLUSTER_ID 0xFF00
 #define RECEIVER_CLUSTER_ID 0xFF01

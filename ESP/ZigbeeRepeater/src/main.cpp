@@ -2,7 +2,7 @@
 #include "modules/AirsoftPoint.h"
 
 static ZigbeeController zigbee;
-static AirsoftPoint point(1);
+static AirsoftPoint point(1, true, true);
 
 void setup() {
     Serial.begin(115200);
