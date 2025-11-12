@@ -16,4 +16,5 @@ private:
     void defineCluster(uint16_t clusterID);
     void setValue(uint8_t arr[]);
     void reportAttr(uint16_t clusterID, uint16_t attrID);
+    void zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message);
 };

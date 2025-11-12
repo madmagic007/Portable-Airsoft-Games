@@ -1,4 +1,5 @@
 #include "CustomCluster.h"
+#include "../modules/AirsoftPoint.h"
 
 CustomCluster::CustomCluster(uint8_t endpoint, bool hasSender, bool hasReceiver) : ZigbeeEP(endpoint) {
     _device_id = ESP_ZB_HA_SIMPLE_SENSOR_DEVICE_ID;
@@ -61,4 +62,8 @@ void CustomCluster::reportAttr(uint16_t clusterID, uint16_t attrID) {
     esp_zb_lock_acquire(portMAX_DELAY);
     esp_err_t err = esp_zb_zcl_report_attr_cmd_req(&report_attr_cmd);
     esp_zb_lock_release();
+}
+
+void CustomCluster::zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) {   
+    AirsoftPoint::confirmed();
 }
