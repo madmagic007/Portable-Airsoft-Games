@@ -120,7 +120,7 @@ class Scanner : public ModuleBase2 {
                 _command = NONE;
                 sendValue(_lastUID);
                 
-                if (_delaySec == 0) vTaskDelay(pdMS_TO_TICKS(200)); // visible blink
+                if (_delaySec == 0) delay(200); // visible blink
                 
                 digitalWrite(_r, LOW);
                 digitalWrite(_g, LOW);
@@ -134,7 +134,7 @@ class Scanner : public ModuleBase2 {
                 digitalWrite(_b, LOW);
                 digitalWrite(_buzzer, LOW);
                 
-                vTaskDelay(pdMS_TO_TICKS(500));
+                delay(500);
                 
                 digitalWrite(_r, LOW);
                 digitalWrite(_g, LOW);
@@ -159,7 +159,7 @@ class Scanner : public ModuleBase2 {
                 }
             }
             
-            vTaskDelay(pdMS_TO_TICKS(50));
+            delay(50);
         }
     }
     
