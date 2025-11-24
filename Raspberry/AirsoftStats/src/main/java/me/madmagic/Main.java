@@ -15,15 +15,8 @@ import java.util.stream.Stream;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        if (args.length == 0) {
-            System.out.println("Please specify a statistic");
-            return;
-        }
-        String key = args[0];
-
-        if (key.isEmpty()) return;
-
-        File statsDir = new File(Main.getRelativePath("stats"));
+        Scanner inScanner = new Scanner(System.in);
+        File statsDir = new File(Main.getRelativePath("gameStats"));
 
         try (Stream<Path> files = Files.list(Path.of(statsDir.getAbsolutePath()))) {
             Optional<Path> latestFile = files
@@ -40,10 +33,15 @@ public class Main {
                 try (FileInputStream fis = new FileInputStream(file.toString())) {
                     JSONObject stats = new JSONObject(new org.json.JSONTokener(fis));
 
-                    printSortedByStat(stats, key);
+                    while (true) {
+                        System.out.print("Statistic key: ");
+                        String line = inScanner.nextLine();
+                        System.out.println();
+                        printSortedByStat(stats, line);
+                        System.out.println();
+                    }
                 } catch (Exception e) {
                     System.out.println("Failed to read stat json: " + e.getMessage());
-                    return;
                 }
             });
         }

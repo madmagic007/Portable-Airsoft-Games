@@ -21,7 +21,7 @@ public class StatsHandler {
 
     public static void init(JSONObject users) throws Exception {
         StatsHandler.users = users;
-        statsDir = new File(Main.getRelativePath("stats"));
+        statsDir = new File(Main.getRelativePath("gameStats"));
         statsDir.mkdir();
     }
 

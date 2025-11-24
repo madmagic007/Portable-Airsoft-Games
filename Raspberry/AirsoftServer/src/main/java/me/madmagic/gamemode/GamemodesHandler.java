@@ -82,8 +82,8 @@ public class GamemodesHandler {
 
     public static void stop() {
         if (activeGamemode == null) return;
-
         activeGamemode.stop();
+        StatsHandler.write();
     }
 
     public static boolean handleConsoleInput(String line, Scanner inScanner) {

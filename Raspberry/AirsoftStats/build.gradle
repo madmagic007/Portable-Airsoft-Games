@@ -31,6 +31,19 @@ jar {
     }
 
     setDestinationDirectory(file(project.rootDir))
+
+    // Also copy to $HOME/Airsoft after build
+    doLast {
+        def airsoftDir = new File(System.getProperty("user.home"), "Airsoft")
+        if (!airsoftDir.exists()) {
+            airsoftDir.mkdirs()
+        }
+        copy {
+            from archiveFile
+            into airsoftDir
+        }
+        println "✅ Copied JAR to ${airsoftDir.absolutePath}"
+    }
 }
 
 remotes {
